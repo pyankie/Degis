@@ -9,6 +9,7 @@ import {
   getUserById,
 } from "./services/userService";
 import { IUser } from "./models/user";
+import { registerUser } from "./controllers/userController";
 
 if (!process.env.jwtPrivateKey)
   throw new Error("FATAL: jwtPrivateKey not defined. ");
@@ -22,10 +23,7 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-app.post("/", async (req, res) => {
-  const email: string = "example@gmail.com";
-  const password: string = "123456789";
-  const username = "demilew";
+app.post("/", registerUser);
 
   const userData = { username, password, email };
   try {

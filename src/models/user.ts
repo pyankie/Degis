@@ -40,9 +40,19 @@ userSchema.methods.generateAuthToken = function () {
 const User = mongoose.model<IUserDocuemnt>("User", userSchema);
 
 const zodSchema = z.object({
-  username: z.string({ message: "username is required" }).min(5).max(55),
-  email: z.string({ message: "Email is required" }).email().min(6).max(254),
-  password: z.string({ message: "Password is required" }).min(8).max(1024),
+  username: z
+    .string({ message: "username is required" })
+    .min(5, { message: "username must contain at least 5 characters" })
+    .max(55),
+  email: z
+    .string({ message: "Email is required" })
+    .email()
+    .min(6, { message: "email must contain at least 6 characters" })
+    .max(254),
+  password: z
+    .string({ message: "Password is required" })
+    .min(8, { message: "password must contain at least 8 characters" })
+    .max(1024),
 });
 
 export default { zodSchema, User };
