@@ -1,15 +1,12 @@
 import express from "express";
 import env from "dotenv";
 env.config();
-
 import mongoose, { ObjectId } from "mongoose";
-import {
-  createUser,
-  getUserByEmail,
-  getUserById,
-} from "./services/userService";
+
+import { getUserById } from "./services/userService";
 import { IUser } from "./models/user";
-import { registerUser } from "./controllers/userController";
+import { registerUser, loginUser } from "./controllers/userController";
+import { errorHandler } from "./controllers/errorMiddleware";
 
 if (!process.env.jwtPrivateKey)
   throw new Error("FATAL: jwtPrivateKey not defined. ");
@@ -23,17 +20,8 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-app.post("/", registerUser);
-
-  const userData = { username, password, email };
-  try {
-    const newUser = await createUser(req.body);
-
-    res.send(newUser);
-  } catch (err: any) {
-    res.send(err.message);
-  }
-});
+app.post("/api/auth/register", registerUser);
+app.post("/api/auth/login", loginUser);
 
 interface IId extends IUser {
   id: ObjectId;

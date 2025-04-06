@@ -34,25 +34,46 @@ const userSchema = new mongoose.Schema({
 const jwtPrivateKey: Secret = process.env.jwtPrivateKey as Secret;
 
 userSchema.methods.generateAuthToken = function () {
-  return jwt.sign({ _id: this._id, role: this.role }, jwtPrivateKey);
+  return jwt.sign(
+    {
+      _id: this._id,
+      email: this.email,
+      // username: this.username,
+      role: this.role,
+    },
+    jwtPrivateKey,
+  );
 };
 
 const User = mongoose.model<IUserDocuemnt>("User", userSchema);
 
-const zodSchema = z.object({
-  username: z
-    .string({ message: "username is required" })
-    .min(5, { message: "username must contain at least 5 characters" })
-    .max(55),
-  email: z
-    .string({ message: "Email is required" })
-    .email()
-    .min(6, { message: "email must contain at least 6 characters" })
-    .max(254),
-  password: z
-    .string({ message: "Password is required" })
-    .min(8, { message: "password must contain at least 8 characters" })
-    .max(1024),
+export const usernameSchema = z
+  .string()
+  .min(5, "Username must contain at least 5 characters")
+  .max(55);
+
+export const emailSchema = z
+  .string()
+  .email("Invalid email")
+  .min(6, "Email must contain at least 6 characters")
+  .max(254);
+
+export const passwordSchema = z
+  .string()
+  .min(8, "Password must contain at least 8 characters")
+  .max(1024);
+
+export const registerSchema = z.object({
+  username: usernameSchema,
+  email: emailSchema,
+  password: passwordSchema,
 });
 
-export default { zodSchema, User };
+export const loginSchema = z.object({
+  usernameOrEmail: z.union([usernameSchema, emailSchema], {
+    // errorMap: () => ({ message: "Must be a valid username or email" }),
+  }),
+  password: passwordSchema,
+});
+
+export default User;

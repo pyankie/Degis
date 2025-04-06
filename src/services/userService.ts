@@ -1,6 +1,7 @@
 import bcrypt from "bcryptjs";
-import userModel, { IUser } from "../models/user";
+import User, { emailSchema, IUser, usernameSchema } from "../models/user";
 import { ObjectId } from "mongoose";
+import _ from "lodash";
 
 export class AppError extends Error {
   constructor(
@@ -19,7 +20,10 @@ export class DuplicateKeyError extends AppError {
   }
 }
 
-const { User } = userModel;
+export interface ILogin {
+  usernameOrEmail: string;
+  password: string;
+}
 
 export const createUser = async (userData: IUser) => {
   const salt = await bcrypt.genSalt(10);
@@ -44,4 +48,38 @@ export const getUserByEmail = async (email: string) => {
 
 export const getUserById = async (id: ObjectId) => {
   return await User.findById(id).select("-role -__v");
+};
+
+export const getUserByEmailOrUsername = async (
+  email?: string,
+  username?: string,
+) => {
+  const query: { [key: string]: string } = {};
+
+  if (email) {
+    query["email"] = email;
+  } else if (username) {
+    query["username"] = username;
+  } else throw new AppError("Email or username must be provided", 401);
+
+  return await User.findOne(query).select("+password");
+};
+
+export const login = async ({ usernameOrEmail, password }: ILogin) => {
+  const isEmail = emailSchema.safeParse(usernameOrEmail).success;
+
+  let email, username;
+  isEmail ? (email = usernameOrEmail) : (username = usernameOrEmail);
+
+  const user = await getUserByEmailOrUsername(email, username);
+
+  if (!user) return { success: false, error: "Invalid credential" };
+
+  const isMatch = await bcrypt.compare(password, user.password);
+  if (!isMatch) return { success: false, error: "Invalid credential" };
+
+  const token = user.generateAuthToken();
+  const filteredUser = _.omit(user.toObject(), ["password", "__v"]);
+
+  return { success: true, token, data: filteredUser };
 };
