@@ -31,7 +31,7 @@ export const registerUser = async (
   } catch (err: any) {
     if (err.code === 11000) {
       const field = Object.keys(err.keyPattern)[0];
-      return next(new DuplicateKeyError("user", field));
+      return next(new DuplicateKeyError(field));
     }
     return next(new Error(err.message));
   }
