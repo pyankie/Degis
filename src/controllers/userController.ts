@@ -24,7 +24,7 @@ export const registerUser = async (
 
     const result = await createUser(userData);
 
-    res.header("x-auth-token", result.token).status(201).json({
+    res.header("x-auth-token", result.token).status(200).json({
       success: true,
       data: result.user,
     });
@@ -47,7 +47,7 @@ export const loginUser = async (
   try {
     const validation = loginSchema
       .strict(
-        `Unexpcted keys detected. Only 'usernameOrEmail' and 'password' are allowed.`,
+        `Unexpected keys detected. Only 'usernameOrEmail' and 'password' are allowed.`,
       )
       .safeParse(userData);
     if (!validation.success) {
@@ -60,16 +60,20 @@ export const loginUser = async (
 
     const status = await login(userData);
     if (!status?.success) {
-      res.status(401).json(status);
+      res.status(400).json(status);
       return;
     }
 
     res.header("x-auth-token", status.token).json({
       success: status.success,
-      token: status.token,
+      // token: status.token,
       data: status.data,
     });
-  } catch (error: any) {
-    res.send(error.message);
+  } catch (err: any) {
+    res.status(500).json({
+      success: false,
+      message: "Login failed. Please try agin later.",
+      error: process.env.NODE_ENV === "development" ? err.message : undefined,
+    });
   }
 };

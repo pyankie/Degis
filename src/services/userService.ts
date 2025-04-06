@@ -112,3 +112,9 @@ export const updateUser = async (id: string, updatedUserData: IUser) => {
 
   return updatedUser;
 };
+
+export const deleteUser = async (id: string) => {
+  const objectId = new Types.ObjectId(id);
+
+  return await User.findByIdAndDelete(objectId);
+};

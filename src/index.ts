@@ -4,6 +4,7 @@ env.config();
 import mongoose, { ObjectId, Types } from "mongoose";
 
 import {
+  deleteUser,
   DuplicateKeyError,
   getUserById,
   updateUser,
@@ -28,7 +29,7 @@ interface IId extends IUser {
   id: ObjectId;
 }
 
-app.get("/", async (req, res) => {
+app.get("/", async (req, res, next) => {
   const body: IId = req.body;
   console.log(req.body);
   try {
@@ -36,7 +37,7 @@ app.get("/", async (req, res) => {
 
     res.send(newUser);
   } catch (err: any) {
-    res.send(err.message);
+    return next(new Error(err.message));
   }
 });
 
@@ -53,17 +54,37 @@ app.put("/api/user/me", auth, async (req: AuthRequest, res, next) => {
     if (!updatedUser) {
       res
         .status(500)
-        .json({ success: false, message: "unable to update user" });
+        .json({ success: false, message: "Unable to update account." });
       return;
     }
 
-    res.status(201).json({ success: true, updatedData: updatedUser });
+    res.status(200).json({ success: true, updatedData: updatedUser });
   } catch (err: any) {
     if (err.message?.includes("duplicate key error")) {
       const field = Object.keys(err.keyPattern)[0];
       return next(new DuplicateKeyError(field));
     }
-    return next(new Error("Internal server error"));
+    return next(new Error("Internal server error."));
+  }
+});
+
+app.delete("/api/user/me", auth, async (req: AuthRequest, res) => {
+  const id = req.user?._id as string;
+  try {
+    const deletedUser = await deleteUser(id);
+
+    if (!deletedUser) {
+      res.status(500).json({ success: false, message: "user not found." });
+      return;
+    }
+
+    res.status(204).end();
+  } catch (err: any) {
+    res.status(500).json({
+      success: false,
+      message: "Failed to delete account.",
+      error: process.env.NODE_ENV === "development" ? err.message : undefined,
+    });
   }
 });
 
