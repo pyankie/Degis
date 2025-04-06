@@ -5,6 +5,7 @@ import mongoose from "mongoose";
 
 import UserController from "./controllers/userController";
 import { auth } from "./middleware/auth";
+import { errorHandler } from "./middleware/error";
 
 if (!process.env.jwtPrivateKey)
   throw new Error("FATAL: jwtPrivateKey not defined. ");
@@ -24,6 +25,7 @@ app.get("/api/auth/me", auth, UserController.getCurrentUser);
 app.put("/api/users/me", auth, UserController.updateUser);
 app.delete("/api/users/me", auth, UserController.deleteUser);
 
+app.use(errorHandler);
 const port = process.env.PORT || 3000;
 
 app.listen(port, () => console.log(`app listening on port ${port}`));

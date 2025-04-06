@@ -22,7 +22,7 @@ export class AppError extends Error {
 
 export class DuplicateKeyError extends AppError {
   constructor(field: string) {
-    super(`${field} is already in use.`, 409);
+    super(`${field} already in use.`, 409);
     this.name = this.constructor.name;
   }
 }
