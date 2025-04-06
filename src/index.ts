@@ -10,6 +10,7 @@ import {
 } from "./services/userService";
 import { IUser } from "./models/user";
 import { registerUser, loginUser } from "./controllers/userController";
+import { auth, AuthRequest } from "./middleware/auth";
 
 if (!process.env.jwtPrivateKey)
   throw new Error("FATAL: jwtPrivateKey not defined. ");
@@ -42,12 +43,19 @@ app.get("/", async (req, res) => {
 app.post("/api/auth/register", registerUser);
 app.post("/api/auth/login", loginUser);
 
-app.put("/api/user/:id", async (req, res, next) => {
-  const id = req.params.id;
+app.put("/api/user/me", auth, async (req: AuthRequest, res, next) => {
+  const id = req.user?._id as string;
   const userData: IUser = req.body;
 
   try {
     const updatedUser = await updateUser(id, userData);
+
+    if (!updatedUser) {
+      res
+        .status(500)
+        .json({ success: false, message: "unable to update user" });
+      return;
+    }
 
     res.status(201).json({ success: true, updatedData: updatedUser });
   } catch (err: any) {
