@@ -1,17 +1,18 @@
 import express from "express";
 import env from "dotenv";
 env.config();
-import mongoose, { ObjectId, Types } from "mongoose";
+import mongoose from "mongoose";
 
-import {
-  deleteUser,
-  DuplicateKeyError,
-  getUserById,
-  updateUser,
-} from "./services/userService";
+import { getUserById } from "./services/userService";
 import { IUser } from "./models/user";
-import { registerUser, loginUser } from "./controllers/userController";
-import { auth, AuthRequest } from "./middleware/auth";
+import {
+  registerUser,
+  loginUser,
+  getCurrentUser,
+  updateUserHandler,
+  deleteUserHandler,
+} from "./controllers/userController";
+import { auth } from "./middleware/auth";
 
 if (!process.env.jwtPrivateKey)
   throw new Error("FATAL: jwtPrivateKey not defined. ");
@@ -41,68 +42,11 @@ app.get("/", async (req, res, next) => {
   }
 });
 
-app.get("/api/auth/me", auth, async (req: AuthRequest, res) => {
-  try {
-    const id = req.user?._id as string;
-    const currentUser = await getUserById(id);
-    if (!currentUser) {
-      res
-        .status(400)
-        .json({ success: false, message: "Unable to get account details." });
-      return;
-    }
-
-    res.status(200).json({ success: true, data: currentUser });
-  } catch (err: any) {
-    res.status(500).json({ success: false, message: "Internal server error." });
-  }
-});
 app.post("/api/auth/register", registerUser);
 app.post("/api/auth/login", loginUser);
-
-app.put("/api/user/me", auth, async (req: AuthRequest, res, next) => {
-  const id = req.user?._id as string;
-  const userData: IUser = req.body;
-
-  try {
-    const updatedUser = await updateUser(id, userData);
-
-    if (!updatedUser) {
-      res
-        .status(500)
-        .json({ success: false, message: "Unable to update account." });
-      return;
-    }
-
-    res.status(200).json({ success: true, updatedData: updatedUser });
-  } catch (err: any) {
-    if (err.message?.includes("duplicate key error")) {
-      const field = Object.keys(err.keyPattern)[0];
-      return next(new DuplicateKeyError(field));
-    }
-    return next(new Error("Internal server error."));
-  }
-});
-
-app.delete("/api/user/me", auth, async (req: AuthRequest, res) => {
-  const id = req.user?._id as string;
-  try {
-    const deletedUser = await deleteUser(id);
-
-    if (!deletedUser) {
-      res.status(404).json({ success: false, message: "user not found." });
-      return;
-    }
-
-    res.status(204).end();
-  } catch (err: any) {
-    res.status(500).json({
-      success: false,
-      message: "Failed to delete account.",
-      error: process.env.NODE_ENV === "development" ? err.message : undefined,
-    });
-  }
-});
+app.get("/api/auth/me", auth, getCurrentUser);
+app.put("/api/users/me", auth, updateUserHandler);
+app.delete("/api/users/me", auth, deleteUserHandler);
 
 const port = process.env.PORT || 3000;
 
