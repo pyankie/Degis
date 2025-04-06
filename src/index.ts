@@ -26,7 +26,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 interface IId extends IUser {
-  id: ObjectId;
+  id: string;
 }
 
 app.get("/", async (req, res, next) => {
@@ -41,6 +41,22 @@ app.get("/", async (req, res, next) => {
   }
 });
 
+app.get("/api/auth/me", auth, async (req: AuthRequest, res) => {
+  try {
+    const id = req.user?._id as string;
+    const currentUser = await getUserById(id);
+    if (!currentUser) {
+      res
+        .status(400)
+        .json({ success: false, message: "Unable to get account details." });
+      return;
+    }
+
+    res.status(200).json({ success: true, data: currentUser });
+  } catch (err: any) {
+    res.status(500).json({ success: false, message: "Internal server error." });
+  }
+});
 app.post("/api/auth/register", registerUser);
 app.post("/api/auth/login", loginUser);
 
@@ -74,7 +90,7 @@ app.delete("/api/user/me", auth, async (req: AuthRequest, res) => {
     const deletedUser = await deleteUser(id);
 
     if (!deletedUser) {
-      res.status(500).json({ success: false, message: "user not found." });
+      res.status(404).json({ success: false, message: "user not found." });
       return;
     }
 

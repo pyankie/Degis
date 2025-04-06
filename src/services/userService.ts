@@ -52,8 +52,10 @@ export const getUserByEmail = async (email: string) => {
   return await User.findOne({ email: email }).select("-role -__v");
 };
 
-export const getUserById = async (id: ObjectId) => {
-  return await User.findById(id).select("-role -__v");
+export const getUserById = async (id: string) => {
+  const objectId = new Types.ObjectId(id);
+
+  return await User.findById(objectId).select("-role -__v");
 };
 
 export const getUserByEmailOrUsername = async (
