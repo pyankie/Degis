@@ -3,9 +3,9 @@ import env from "dotenv";
 env.config();
 import mongoose from "mongoose";
 
-import UserController from "./controllers/userController";
-import { auth } from "./middleware/auth";
 import { errorHandler } from "./middleware/error";
+import authRoutes from "./routes/authRoutes";
+import userRoutes from "./routes/userRoutes";
 
 if (!process.env.jwtPrivateKey)
   throw new Error("FATAL: jwtPrivateKey not defined. ");
@@ -19,11 +19,8 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-app.post("/api/auth/register", UserController.registerUser);
-app.post("/api/auth/login", UserController.loginUser);
-app.get("/api/auth/me", auth, UserController.getCurrentUser);
-app.put("/api/users/me", auth, UserController.updateUser);
-app.delete("/api/users/me", auth, UserController.deleteUser);
+app.use("/api/auth", authRoutes);
+app.use("/api/users/me", userRoutes);
 
 app.use(errorHandler);
 const port = process.env.PORT || 3000;
