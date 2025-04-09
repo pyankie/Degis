@@ -1,4 +1,4 @@
-import mongoose, { Document, model } from "mongoose";
+import mongoose, { Document } from "mongoose";
 import { z } from "zod";
 
 // (form payload)
@@ -76,17 +76,40 @@ const eventSchema = new mongoose.Schema<IEventDocument>(
   { timestamps: true },
 );
 
-const eventPostSchema = z
+export const booleanSchema = z
+  .union([
+    z.boolean(),
+    z.string().transform((val) => {
+      const truthyValues = ["true", "1", "yes"];
+      const falsyValues = [
+        "false",
+        "0",
+        "no",
+        null,
+        undefined,
+        "null",
+        "undefined",
+      ];
+      if (falsyValues.includes(val.toLowerCase().trim())) return false;
+      else if (truthyValues.includes(val.toLowerCase().trim())) return true;
+      throw new Error("Invalid boolean string.");
+    }),
+    z.number().transform((n) => n !== 0),
+  ])
+  .default(false);
+
+const zodEventSchema = z
   .object({
-    title: z.string().min(5).max(55),
+    title: z.string({}).min(5).max(55),
     description: z.string().min(5).max(1024),
     date: z.coerce.date(),
     startDate: z.coerce.date(),
     endDate: z.coerce.date(),
     venue: z.string().min(5).max(55),
-    isFree: z.boolean(),
-    price: z.number().min(0).optional(),
-    capacity: z.number().min(0),
+    isFree: booleanSchema,
+    organizerId: z.string(),
+    price: z.coerce.number().min(0).optional(),
+    capacity: z.coerce.number().min(0),
     category: z.enum([
       "cinema",
       "educational",
@@ -97,7 +120,7 @@ const eventPostSchema = z
       "webinar",
     ]),
     coverImage: z.string().optional(),
-    isPrivate: z.boolean(),
+    isPrivate: booleanSchema,
   })
   .refine(
     (data) =>
@@ -105,5 +128,7 @@ const eventPostSchema = z
     { message: "Price is required for paid events", path: ["price"] },
   );
 
-export const Event = model<IEventDocument>("Event", eventSchema);
-export { eventPostSchema, IEvent };
+type eventType = z.infer<typeof zodEventSchema>;
+const Event = mongoose.model<IEventDocument>("Event", eventSchema);
+
+export { IEventDocument, IEvent, Event, zodEventSchema, eventType };

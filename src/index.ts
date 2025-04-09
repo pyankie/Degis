@@ -6,6 +6,15 @@ import mongoose from "mongoose";
 import { errorHandler } from "./middleware/error";
 import authRoutes from "./routes/authRoutes";
 import userRoutes from "./routes/userRoutes";
+import { createEvent } from "./services/eventService";
+import {
+  eventType,
+  zodEventSchema,
+  IEvent,
+  IEventDocument,
+} from "./models/event";
+import { AppError } from "./services/userService";
+import { z } from "zod";
 
 if (!process.env.jwtPrivateKey)
   throw new Error("FATAL: jwtPrivateKey not defined. ");
@@ -21,6 +30,35 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use("/api/auth", authRoutes);
 app.use("/api/users/me", userRoutes);
+
+app.post("/api/events/", async (req, res, next) => {
+  const eventData: eventType = req.body;
+
+  try {
+    const validation = zodEventSchema.safeParse(eventData);
+
+    if (!validation.success) {
+      const errMessage = validation.error.errors
+        .map((err) => err.message)
+        .join(", ");
+
+      return next(new AppError(errMessage, 400));
+    }
+
+    const newEvent = await createEvent(validation.data as eventType);
+    if (!newEvent) {
+      res
+        .status(400)
+        .json({ success: false, message: "Unable to create an event." });
+      return;
+    }
+
+    res.json({ success: true, data: newEvent });
+  } catch (err: any) {
+    res.status(500).json({ success: false, message: "Internal server error." });
+    next(new Error(err.message));
+  }
+});
 
 app.use(errorHandler);
 const port = process.env.PORT || 3000;
