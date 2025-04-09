@@ -9,27 +9,38 @@ export interface IUser {
 }
 
 export interface IUserDocuemnt extends IUser, Document {
-  role: "user";
+  role: "user" | "organizer" | "admin";
+  createdAt: Date;
+  updatedAt: Date;
   generateAuthToken: () => string;
 }
 
-const userSchema = new mongoose.Schema({
-  username: {
-    type: String,
-    unique: true,
-    required: true,
-    lowercase: true,
-    // collation: { locale: "en", strength: 1 },
+const userSchema = new mongoose.Schema(
+  {
+    username: {
+      type: String,
+      unique: true,
+      required: true,
+      lowercase: true,
+      // collation: { locale: "en", strength: 1 },
+    },
+    email: {
+      type: String,
+      unique: true,
+      required: true,
+      lowercase: true,
+    },
+    password: { type: String, required: true, maxlength: 1024, select: false },
+    role: {
+      type: String,
+      enum: ["user", "organizer", "admin"],
+      default: "user",
+    },
+    createdAt: { type: Date, default: Date.now },
+    updatedAt: { type: Date, default: Date.now },
   },
-  email: {
-    type: String,
-    unique: true,
-    required: true,
-    lowercase: true,
-  },
-  password: { type: String, required: true, maxlength: 1024, select: false },
-  role: { type: String, default: "user" },
-});
+  { timestamps: true },
+);
 
 const jwtPrivateKey: Secret = process.env.jwtPrivateKey as Secret;
 
