@@ -1,11 +1,27 @@
+import mongoose from "mongoose";
 import { eventType } from "../models/event";
 import { Event, IEvent, IEventDocument } from "../models/event";
+import User from "../models/user";
 
 export const createEvent = async (eventData: eventType) => {
+  const { invitees, ...rest } = eventData;
+
+  const invitedEmails = invitees?.map((invt) => invt.email);
+  const registeredUsers = invitedEmails?.length
+    ? await User.find({ email: { $in: invitedEmails } }).select("_id email")
+    : [];
+
+  const registeredEmails = registeredUsers?.map((u) => u.email);
+  const registeredIds = registeredUsers?.map((u) => u._id);
+
+  const unregisteredEmails =
+    invitedEmails?.filter((email) => !registeredEmails.includes(email)) || [];
+
   const newEvent = new Event({
-    ...eventData,
-    slug: generateSlug(eventData.title),
-    // invitees: eventData.invitees
+    ...rest,
+    slug: generateSlug(rest.title),
+    organizerId: new mongoose.Types.ObjectId(rest.organizerId),
+    invitees: registeredIds,
   });
   return await newEvent.save();
 };

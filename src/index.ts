@@ -14,7 +14,7 @@ import {
   IEventDocument,
 } from "./models/event";
 import { AppError } from "./services/userService";
-import { z } from "zod";
+import { z, ZodError } from "zod";
 
 if (!process.env.jwtPrivateKey)
   throw new Error("FATAL: jwtPrivateKey not defined. ");
@@ -55,7 +55,6 @@ app.post("/api/events/", async (req, res, next) => {
 
     res.json({ success: true, data: newEvent });
   } catch (err: any) {
-    res.status(500).json({ success: false, message: "Internal server error." });
     next(new Error(err.message));
   }
 });

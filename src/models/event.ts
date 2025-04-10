@@ -76,6 +76,10 @@ const eventSchema = new mongoose.Schema<IEventDocument>(
   { timestamps: true },
 );
 
+const zodInviteeSchema = z.object({
+  email: z.string().email(),
+});
+
 export const booleanSchema = z
   .union([
     z.boolean(),
@@ -108,6 +112,7 @@ const zodEventSchema = z
     venue: z.string().min(5).max(55),
     isFree: booleanSchema,
     organizerId: z.string(),
+    invitees: z.array(zodInviteeSchema).optional(),
     price: z.coerce.number().min(0).optional(),
     capacity: z.coerce.number().min(0),
     category: z.enum([
@@ -126,6 +131,49 @@ const zodEventSchema = z
     (data) =>
       data.isFree ? true : data.price !== undefined && data.price >= 0,
     { message: "Price is required for paid events", path: ["price"] },
+  )
+  .refine(
+    (data) => {
+      return data.startDate <= data.endDate;
+    },
+    {
+      message: "start date must be before or equal to end date",
+      path: ["startDate"],
+    },
+  )
+  .refine(
+    (data) => {
+      return (
+        data.startDate.getDate <= data.date.getDate &&
+        data.date.getDate <= data.endDate.getDate
+      );
+    },
+    { message: "date must be between start and end date", path: ["date"] },
+  )
+  .superRefine((data, ctx) => {
+    if (data.isPrivate && (!data.invitees || data.invitees.length === 0)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Private events must have invitees",
+        path: ["invitees"],
+      });
+    }
+
+    if (!data.isPrivate && data.invitees && data.invitees.length > 0) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Public events cannot have invitees",
+        path: ["invitees"],
+      });
+    }
+  })
+  .refine(
+    (data) =>
+      data.isPrivate ? (data.invitees?.length ?? 0) <= data.capacity : true,
+    {
+      message: "Invitees must not exceed event capacity",
+      path: ["invitees"],
+    },
   );
 
 type eventType = z.infer<typeof zodEventSchema>;
