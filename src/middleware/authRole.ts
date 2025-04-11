@@ -7,8 +7,10 @@ export const authorize = (allowedRoles: string[]) => {
     const eventData: eventType = req.body;
 
     const userRole = req.user?.role as string;
-    const isPaidEvent =
-      typeof eventData.price === "number" && eventData.price > 0;
+
+    const isPaidEvent = eventData.ticketTypes?.some(
+      (ticket) => typeof ticket.price === "number" && ticket.price > 0,
+    );
 
     if (!isPaidEvent) {
       next();

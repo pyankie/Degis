@@ -138,17 +138,33 @@ const zodEventSchema = z
     coverImage: z.string().optional(),
     isPrivate: booleanSchema,
   })
-  .refine(
-    (data) =>
-      data.isFree
-        ? !data.ticketTypes || data.ticketTypes.every((t) => t.price === 0)
-        : data.ticketTypes && data.ticketTypes.length > 0,
-    {
-      message:
-        "Paid events must have ticket types, free events must have zero prices",
-      path: ["ticketTypes"],
-    },
-  )
+  .superRefine((data, ctx) => {
+    //  free events
+    if (data.isFree) {
+      const hasPaidTicket = data.ticketTypes?.some((t) => t.price > 0);
+      if (hasPaidTicket) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Free events cannot have paid ticket types",
+          path: ["ticketTypes"],
+        });
+      }
+    }
+
+    //  paid events
+    if (!data.isFree) {
+      const noTicketTypes = !data.ticketTypes || data.ticketTypes.length === 0;
+      const hasFreeTicket = data.ticketTypes?.some((t) => t.price === 0);
+      if (noTicketTypes || hasFreeTicket) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message:
+            "Paid events must only have ticket types with a price above 0",
+          path: ["ticketTypes"],
+        });
+      }
+    }
+  })
   .refine(
     (data) => {
       return data.startDate <= data.endDate;

@@ -7,14 +7,8 @@ import { errorHandler } from "./middleware/error";
 import authRoutes from "./routes/authRoutes";
 import userRoutes from "./routes/userRoutes";
 import { createEvent } from "./services/eventService";
-import {
-  eventType,
-  zodEventSchema,
-  IEvent,
-  IEventDocument,
-} from "./models/event";
+import { eventType, zodEventSchema } from "./models/event";
 import { AppError } from "./services/userService";
-import { z, ZodError } from "zod";
 import { authorize } from "./middleware/authRole";
 import { auth } from "./middleware/auth";
 

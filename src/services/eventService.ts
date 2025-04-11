@@ -1,8 +1,8 @@
 import mongoose from "mongoose";
 import { eventType } from "../models/event";
-import { Event, IEvent, IEventDocument } from "../models/event";
+import { Event } from "../models/event";
 import User from "../models/user";
-import { IEventInvitation, EventInvitation } from "../models/eventInvitations";
+import { EventInvitation } from "../models/eventInvitation";
 import { v4 as uuidv4 } from "uuid";
 
 interface ISplitInvitees {
