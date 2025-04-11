@@ -10,13 +10,18 @@ interface IEvent {
   endDate: Date;
   venue: string;
   isFree: boolean;
-  price?: number;
+  ticketTypes?: ITicketType[];
   capacity: number;
   category: string;
   coverImage?: string;
   isPrivate: boolean;
 }
 
+interface ITicketType {
+  name: string;
+  price: number;
+  capacity?: number;
+}
 //  mongoose document
 interface IEventDocument extends IEvent, Document {
   slug: string;
@@ -56,12 +61,13 @@ const eventSchema = new mongoose.Schema<IEventDocument>(
     startDate: { type: Date, required: true },
     endDate: { type: Date, required: true },
     isFree: { type: Boolean, default: true },
-    price: {
-      type: Number,
-      required: function () {
-        return !this.isFree;
+    ticketTypes: [
+      {
+        name: { type: String, required: true },
+        price: { type: Number, required: true },
+        capacity: { type: Number },
       },
-    },
+    ],
     status: {
       type: String,
       enum: ["pending", "approved", "live", "completed"],
@@ -78,6 +84,11 @@ const eventSchema = new mongoose.Schema<IEventDocument>(
 
 const zodInviteeSchema = z.object({
   email: z.string().email(),
+});
+const ticketTypeSchema = z.object({
+  name: z.string().min(1),
+  price: z.coerce.number().min(0),
+  capacity: z.coerce.number().min(0),
 });
 
 export const booleanSchema = z
@@ -113,7 +124,7 @@ const zodEventSchema = z
     isFree: booleanSchema,
     organizerId: z.string(),
     invitees: z.array(zodInviteeSchema).optional(),
-    price: z.coerce.number().min(0).optional(),
+    ticketTypes: z.array(ticketTypeSchema).optional(),
     capacity: z.coerce.number().min(0),
     category: z.enum([
       "cinema",
@@ -129,8 +140,14 @@ const zodEventSchema = z
   })
   .refine(
     (data) =>
-      data.isFree ? true : data.price !== undefined && data.price >= 0,
-    { message: "Price is required for paid events", path: ["price"] },
+      data.isFree
+        ? !data.ticketTypes || data.ticketTypes.every((t) => t.price === 0)
+        : data.ticketTypes && data.ticketTypes.length > 0,
+    {
+      message:
+        "Paid events must have ticket types, free events must have zero prices",
+      path: ["ticketTypes"],
+    },
   )
   .refine(
     (data) => {
