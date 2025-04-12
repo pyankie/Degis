@@ -82,9 +82,7 @@ const eventSchema = new mongoose.Schema<IEventDocument>(
   { timestamps: true },
 );
 
-const zodInviteeSchema = z.object({
-  email: z.string().email(),
-});
+const zodInviteeSchema = z.string().email();
 const ticketTypeSchema = z.object({
   name: z.string().min(1),
   price: z.coerce.number().min(0),

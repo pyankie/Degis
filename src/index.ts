@@ -65,6 +65,7 @@ app.post(
         res.status(401).json({ success: false, message: "Unauthorized" });
         return;
       }
+
       const validData: IEventType = validation.data as IEventType;
 
       validData.organizerId = req.user?._id ?? "";
@@ -125,8 +126,7 @@ app.put(
         return;
       }
 
-      const eventCreatorId = event._id as string;
-
+      const eventCreatorId = event.organizerId.toString();
       if (req.user?._id !== eventCreatorId) {
         res.status(403).json({ success: false, message: "Unauthorized" });
         return;
@@ -164,7 +164,7 @@ app.put(
           email: { $in: unregisteredEmails },
         }).select("_id email eventId");
 
-        console.log(previousInvitees);
+        // console.log(previousInvitees);
         const prevEmails = previousInvitees.map((inv) => inv.email);
 
         const newEmails = unregisteredEmails.filter(

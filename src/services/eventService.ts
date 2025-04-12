@@ -39,9 +39,9 @@ export const createEvent = async (eventData: IEventType) => {
 };
 
 export const splitInvtees = async (
-  invitees?: { email: string }[],
+  invitees?: string[],
 ): Promise<ISplitInvitees> => {
-  const invitedEmails = invitees?.map((invt) => invt.email);
+  const invitedEmails = invitees;
 
   const registeredUsers = invitedEmails?.length
     ? await User.find({ email: { $in: invitedEmails } }).select("_id email ")
