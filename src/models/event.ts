@@ -209,7 +209,91 @@ const zodEventSchema = z
     },
   );
 
+const zodEventUpdateSchema = z
+  .object({
+    title: z.string().min(5).max(55).optional(),
+    description: z.string().min(5).max(1024).optional(),
+    date: z.coerce.date().optional(),
+    startDate: z.coerce.date().optional(),
+    endDate: z.coerce.date().optional(),
+    venue: z.string().min(5).max(55).optional(),
+    isFree: z.boolean().optional(),
+    ticketTypes: z
+      .array(
+        z.object({
+          name: z.string().min(1),
+          price: z.coerce.number().min(0),
+          capacity: z.coerce.number().min(0).optional(),
+        }),
+      )
+      .optional(),
+    capacity: z.coerce.number().min(0).optional(),
+    coverImage: z.string().optional(),
+    isPrivate: z.boolean().optional(),
+    invitees: z.array(zodInviteeSchema).optional(),
+  })
+  .superRefine((data, ctx) => {
+    // Only validate ticketTypes if provided
+    if (data.ticketTypes) {
+      if (data.isFree === true && data.ticketTypes.some((t) => t.price > 0)) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Free events cannot have paid ticket types",
+          path: ["ticketTypes"],
+        });
+      }
+      if (
+        data.isFree === false &&
+        (!data.ticketTypes.length ||
+          data.ticketTypes.some((t) => t.price === 0))
+      ) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Paid events must have ticket types with prices above 0",
+          path: ["ticketTypes"],
+        });
+      }
+    }
+
+    // Date consistency if provided
+    if (data.startDate && data.endDate && data.startDate > data.endDate) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Start date must be before or equal to end date",
+        path: ["startDate"],
+      });
+    }
+
+    // Private/invitees logic if provided
+    if (
+      data.isPrivate === true &&
+      (!data.invitees || data.invitees.length === 0)
+    ) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Private events must have invitees",
+        path: ["invitees"],
+      });
+    }
+    if (data.isPrivate === false && (data.invitees?.length ?? 0) > 0) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Public events cannot have invitees",
+        path: ["invitees"],
+      });
+    }
+  });
+
+type eventUpdateType = z.infer<typeof zodEventUpdateSchema>;
 type eventType = z.infer<typeof zodEventSchema>;
 const Event = mongoose.model<IEventDocument>("Event", eventSchema);
 
-export { IEventDocument, IEvent, Event, zodEventSchema, eventType };
+export {
+  IEventDocument,
+  IEvent,
+  Event,
+  zodEventSchema,
+  zodEventUpdateSchema,
+  eventType,
+  eventUpdateType,
+};

@@ -1,11 +1,11 @@
 import mongoose from "mongoose";
-import { eventType } from "../models/event";
+import { eventType, eventUpdateType } from "../models/event";
 import { Event } from "../models/event";
 import User from "../models/user";
 import { EventInvitation } from "../models/eventInvitation";
 import { v4 as uuidv4 } from "uuid";
 
-interface ISplitInvitees {
+export interface ISplitInvitees {
   registeredIds: mongoose.Types.ObjectId[];
   unregisteredEmails: string[];
 }
@@ -38,7 +38,7 @@ export const createEvent = async (eventData: eventType) => {
   return savedEvent;
 };
 
-const splitInvtees = async (
+export const splitInvtees = async (
   invitees?: { email: string }[],
 ): Promise<ISplitInvitees> => {
   const invitedEmails = invitees?.map((invt) => invt.email);
@@ -61,7 +61,7 @@ const splitInvtees = async (
     unregisteredEmails,
   };
 };
-const generateSlug = (
+export const generateSlug = (
   title: string,
   uniqueIdentifier?: string | number,
 ): string => {
