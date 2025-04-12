@@ -14,14 +14,16 @@ import {
   splitInvtees,
 } from "../services/eventService";
 
+import { Event } from "../models/event";
+
 import {
   IEventType,
-  Event,
   EventType,
   EventUpdateType,
   zodEventSchema,
   zodEventUpdateSchema,
-} from "../models/event";
+} from "../schemas/event.schema";
+
 import { EventInvitation } from "../models/eventInvitation";
 
 const objectIdSchema = z

@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import { IEventType, EventUpdateType } from "../models/event";
+import { IEventType } from "../schemas/event.schema";
 import { Event } from "../models/event";
 import User from "../models/user";
 import { EventInvitation } from "../models/eventInvitation";

@@ -3,11 +3,11 @@ import env from "dotenv";
 env.config();
 import mongoose from "mongoose";
 
-import { errorHandler } from "./middleware/error";
+import { errorHandler } from "./middlewares/error";
 import authRoutes from "./routes/authRoutes";
 import userRoutes from "./routes/userRoutes";
-import { authorize } from "./middleware/authRole";
-import { auth } from "./middleware/auth";
+import { authorize } from "./middlewares/authRole";
+import { auth } from "./middlewares/auth";
 import EventController from "./controllers/eventController";
 
 if (!process.env.jwtPrivateKey)

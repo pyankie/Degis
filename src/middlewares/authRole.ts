@@ -1,6 +1,6 @@
 import { NextFunction, Response } from "express";
 import { AuthRequest } from "./auth";
-import { EventType } from "../models/event";
+import { EventType } from "../schemas/event.schema";
 
 export const authorize = (allowedRoles: string[]) => {
   return (req: AuthRequest, res: Response, next: NextFunction) => {

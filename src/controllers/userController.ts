@@ -7,7 +7,8 @@ import {
   login,
   updateUser,
 } from "../services/userService";
-import { IUser, registerSchema, loginSchema } from "../models/user";
+import { IUser } from "../models/user";
+import { registerSchema, loginSchema } from "../schemas/user.schemas";
 
 import { AppError, DuplicateKeyError } from "../services/userService";
 import { AuthRequest } from "../middleware/auth";

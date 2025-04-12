@@ -1,5 +1,7 @@
 import bcrypt from "bcryptjs";
-import User, { emailSchema, IUser, usernameSchema } from "../models/user";
+import { emailSchema } from "../schemas/user.schemas";
+import User, { IUser } from "../models/user";
+
 import { ObjectId, Types } from "mongoose";
 import _ from "lodash";
 
