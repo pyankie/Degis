@@ -10,6 +10,7 @@ import userRoutes from "./routes/userRoutes";
 import {
   createEvent,
   generateSlug,
+  getEventById,
   ISplitInvitees,
   splitInvtees,
 } from "./services/eventService";
@@ -41,6 +42,34 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use("/api/auth", authRoutes);
 app.use("/api/users/me", userRoutes);
+
+const objectIdSchema = z
+  .string()
+  .refine((val) => mongoose.Types.ObjectId.isValid(val), {
+    message: "invalid object id",
+  });
+
+app.get("/api/events/:id", async (req, res, next) => {
+  try {
+    const eventIdParse = objectIdSchema.safeParse(req.params.id);
+    if (!eventIdParse.success) {
+      const eventIdErr = eventIdParse.error?.errors
+        .map((err) => err.message)
+        .join(", ");
+      return next(new AppError(eventIdErr, 400));
+    }
+
+    const eventId = eventIdParse.data;
+    const event = await getEventById(eventId);
+    if (!event) {
+      res.status(404).json({ success: false, message: "Event not found" });
+      return;
+    }
+    res.json({ success: true, data: event });
+  } catch (err: any) {
+    return next(new Error("Internal server error"));
+  }
+});
 
 app.post(
   "/api/events/",
@@ -93,12 +122,6 @@ app.put(
     interface UpdateType extends EventUpdateType {
       slug?: string;
     }
-
-    const objectIdSchema = z
-      .string()
-      .refine((val) => mongoose.Types.ObjectId.isValid(val), {
-        message: "invalid object id",
-      });
 
     const updateData: UpdateType = req.body;
     try {

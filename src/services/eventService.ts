@@ -10,6 +10,11 @@ export interface ISplitInvitees {
   unregisteredEmails: string[];
 }
 
+export const getEventById = async (eventId: string) => {
+  const id = new mongoose.Types.ObjectId(eventId);
+  return await Event.findById(id);
+};
+
 export const createEvent = async (eventData: IEventType) => {
   const { invitees, ...rest } = eventData;
   const { registeredIds, unregisteredEmails } = await splitInvtees(invitees);
