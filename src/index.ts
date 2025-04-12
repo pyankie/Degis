@@ -10,6 +10,7 @@ import userRoutes from "./routes/userRoutes";
 import {
   createEvent,
   generateSlug,
+  getCurrentOrganizerEvents,
   getEventById,
   ISplitInvitees,
   splitInvtees,
@@ -70,7 +71,20 @@ app.get("/api/events/:id", async (req, res, next) => {
     return next(new Error("Internal server error"));
   }
 });
+app.get("/api/my-events", auth, async (req: AuthRequest, res, next) => {
+  const userId = req.user?._id;
+  try {
+    const events = await getCurrentOrganizerEvents(userId ?? "");
 
+    if (!events || events.length === 0) {
+      res.status(404).json({ success: false, message: "No event found" });
+      return;
+    }
+    res.json({ success: true, data: events });
+  } catch (err: any) {
+    return next(new Error("Internal server error"));
+  }
+});
 app.post(
   "/api/events/",
   auth,
