@@ -122,7 +122,6 @@ const zodEventSchema = z
     endDate: z.coerce.date(),
     venue: z.string().min(5).max(55),
     isFree: booleanSchema,
-    organizerId: z.string(),
     invitees: z.array(zodInviteeSchema).optional(),
     ticketTypes: z.array(ticketTypeSchema).optional(),
     capacity: z.coerce.number().min(0),
@@ -284,16 +283,22 @@ const zodEventUpdateSchema = z
     }
   });
 
-type eventUpdateType = z.infer<typeof zodEventUpdateSchema>;
-type eventType = z.infer<typeof zodEventSchema>;
+type EventUpdateType = z.infer<typeof zodEventUpdateSchema>;
+type EventType = z.infer<typeof zodEventSchema>;
+
+interface IEventType extends EventType {
+  organizerId: string;
+}
+
 const Event = mongoose.model<IEventDocument>("Event", eventSchema);
 
 export {
+  IEventType,
   IEventDocument,
   IEvent,
   Event,
   zodEventSchema,
   zodEventUpdateSchema,
-  eventType,
-  eventUpdateType,
+  EventType,
+  EventUpdateType,
 };

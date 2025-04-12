@@ -1,10 +1,10 @@
 import { NextFunction, Response } from "express";
 import { AuthRequest } from "./auth";
-import { eventType } from "../models/event";
+import { EventType } from "../models/event";
 
 export const authorize = (allowedRoles: string[]) => {
   return (req: AuthRequest, res: Response, next: NextFunction) => {
-    const eventData: eventType = req.body;
+    const eventData: EventType = req.body;
 
     const userRole = req.user?.role as string;
 

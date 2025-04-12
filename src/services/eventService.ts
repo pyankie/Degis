@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import { eventType, eventUpdateType } from "../models/event";
+import { IEventType, EventUpdateType } from "../models/event";
 import { Event } from "../models/event";
 import User from "../models/user";
 import { EventInvitation } from "../models/eventInvitation";
@@ -10,7 +10,7 @@ export interface ISplitInvitees {
   unregisteredEmails: string[];
 }
 
-export const createEvent = async (eventData: eventType) => {
+export const createEvent = async (eventData: IEventType) => {
   const { invitees, ...rest } = eventData;
   const { registeredIds, unregisteredEmails } = await splitInvtees(invitees);
 

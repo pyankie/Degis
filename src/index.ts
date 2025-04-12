@@ -14,9 +14,10 @@ import {
   splitInvtees,
 } from "./services/eventService";
 import {
+  IEventType,
   Event,
-  eventType,
-  eventUpdateType,
+  EventType,
+  EventUpdateType,
   zodEventSchema,
   zodEventUpdateSchema,
 } from "./models/event";
@@ -46,7 +47,7 @@ app.post(
   auth,
   authorize(["organizer", "admin"]),
   async (req: AuthRequest, res, next) => {
-    const eventData: eventType = req.body;
+    const eventData: EventType = req.body;
 
     try {
       const validation = zodEventSchema.safeParse(eventData);
@@ -64,8 +65,11 @@ app.post(
         res.status(401).json({ success: false, message: "Unauthorized" });
         return;
       }
+      const validData: IEventType = validation.data as IEventType;
 
-      const newEvent = await createEvent(validation.data as eventType);
+      validData.organizerId = req.user?._id ?? "";
+
+      const newEvent = await createEvent(validData);
       if (!newEvent) {
         res
           .status(400)
@@ -85,7 +89,7 @@ app.put(
   auth,
   authorize(["admin", "organizer"]),
   async (req: AuthRequest, res, next) => {
-    interface updateType extends eventUpdateType {
+    interface UpdateType extends EventUpdateType {
       slug?: string;
     }
 
@@ -95,8 +99,7 @@ app.put(
         message: "invalid object id",
       });
 
-    const updateData: updateType = req.body;
-
+    const updateData: UpdateType = req.body;
     try {
       const eventIdParse = objectIdSchema.safeParse(req.params.id);
       const updateDataParse = zodEventUpdateSchema.safeParse(updateData);
@@ -109,7 +112,7 @@ app.put(
         const eventIdErr = eventIdParse.error?.errors
           .map((err) => err.message)
           .join(", ");
-        return next(new AppError(`${updateDataErr} ${eventIdErr} `, 400));
+        return next(new AppError(`${updateDataErr} ${eventIdErr}`, 400));
       }
 
       const event = await Event.findById(eventIdParse.data);
@@ -119,6 +122,13 @@ app.put(
           success: false,
           message: "Event doesn't exist",
         });
+        return;
+      }
+
+      const eventCreatorId = event._id as string;
+
+      if (req.user?._id !== eventCreatorId) {
+        res.status(403).json({ success: false, message: "Unauthorized" });
         return;
       }
 
@@ -142,8 +152,9 @@ app.put(
       const { registeredIds, unregisteredEmails } =
         await splitInvtees(invitees);
 
+      const eventId = eventIdParse.data;
       const updatedEvent = await Event.findByIdAndUpdate(
-        eventIdParse.data,
+        eventId,
         { $set: { invitees: registeredIds, ...rest } },
         { new: true, runValidators: true },
       );
@@ -163,7 +174,7 @@ app.put(
         if (newEmails.length > 0) {
           const newInvitees = newEmails.map((email) => {
             return {
-              eventId: eventIdParse.data,
+              eventId: eventId,
               token: uuidv4(),
               email,
               expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
