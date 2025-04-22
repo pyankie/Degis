@@ -4,30 +4,8 @@ import User, { IUser } from "../models/user";
 
 import { ObjectId, Types } from "mongoose";
 import _ from "lodash";
+import { AppError } from "../utils/errors/appError";
 
-export class AppError extends Error {
-  constructor(
-    message: string,
-    public statusCode: number = 500,
-  ) {
-    super(message);
-    this.name = this.constructor.name;
-  }
-}
-
-// export class DuplicateKeyError extends AppError {
-//   constructor(resource: string, field: string) {
-//     super(`${resource} with this ${field} already exits.`, 409);
-//     this.name = this.constructor.name;
-//   }
-// }
-
-export class DuplicateKeyError extends AppError {
-  constructor(field: string) {
-    super(`${field} already in use.`, 409);
-    this.name = this.constructor.name;
-  }
-}
 export interface ILogin {
   usernameOrEmail: string;
   password: string;

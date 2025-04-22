@@ -10,8 +10,9 @@ import {
 import { IUser } from "../models/user";
 import { registerSchema, loginSchema } from "../schemas/user.schemas";
 
-import { AppError, DuplicateKeyError } from "../services/userService";
-import { AuthRequest } from "../middleware/auth";
+import { AppError } from "../utils/errors/appError";
+import { DuplicateKeyError } from "../utils/errors/duplicateKeyError";
+import { AuthRequest } from "../middlewares/auth";
 
 export default class UserController {
   static registerUser = async (

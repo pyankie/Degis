@@ -3,8 +3,8 @@ import { v4 as uuidv4 } from "uuid";
 import { z } from "zod";
 import { NextFunction, Response } from "express";
 
-import { AppError } from "../services/userService";
-import { AuthRequest } from "../middleware/auth";
+import { AppError } from "../utils/errors/appError";
+import { AuthRequest } from "../middlewares/auth";
 
 import {
   createEvent,
