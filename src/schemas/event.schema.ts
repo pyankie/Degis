@@ -79,26 +79,22 @@ const zodEventSchema = z
         });
       }
     }
-  })
-  .refine(
-    (data) => {
-      return data.startDate <= data.endDate;
-    },
-    {
-      message: "start date must be before or equal to end date",
-      path: ["startDate"],
-    },
-  )
-  .refine(
-    (data) => {
-      return (
-        data.startDate.getDate <= data.date.getDate &&
-        data.date.getDate <= data.endDate.getDate
-      );
-    },
-    { message: "date must be between start and end date", path: ["date"] },
-  )
-  .superRefine((data, ctx) => {
+
+    if (data.startDate > data.date || data.date > data.endDate) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Date must be between start and end date",
+        path: ["date"],
+      });
+    }
+    if (data.startDate > data.endDate) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Start date must be before or equal to end date",
+        path: ["startDate"],
+      });
+    }
+
     if (data.isPrivate && (!data.invitees || data.invitees.length === 0)) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
@@ -114,15 +110,15 @@ const zodEventSchema = z
         path: ["invitees"],
       });
     }
-  })
-  .refine(
-    (data) =>
-      data.isPrivate ? (data.invitees?.length ?? 0) <= data.capacity : true,
-    {
-      message: "Invitees must not exceed event capacity",
-      path: ["invitees"],
-    },
-  );
+
+    if (data.isPrivate && (data.invitees?.length ?? 0) > data.capacity) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Invitees must not exceed event capacity",
+        path: ["invitees"],
+      });
+    }
+  });
 
 const zodEventUpdateSchema = z
   .object({
@@ -148,7 +144,7 @@ const zodEventUpdateSchema = z
     invitees: z.array(zodInviteeSchema).optional(),
   })
   .superRefine((data, ctx) => {
-    // Only validate ticketTypes if provided
+    // validate only if ticketTypes is present
     if (data.ticketTypes) {
       if (data.isFree === true && data.ticketTypes.some((t) => t.price > 0)) {
         ctx.addIssue({
@@ -170,7 +166,6 @@ const zodEventUpdateSchema = z
       }
     }
 
-    // Date consistency if provided
     if (data.startDate && data.endDate && data.startDate > data.endDate) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
@@ -179,7 +174,6 @@ const zodEventUpdateSchema = z
       });
     }
 
-    // Private/invitees logic if provided
     if (
       data.isPrivate === true &&
       (!data.invitees || data.invitees.length === 0)
