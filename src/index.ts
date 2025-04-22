@@ -6,9 +6,8 @@ import mongoose from "mongoose";
 import { errorHandler } from "./middlewares/error";
 import authRoutes from "./routes/authRoutes";
 import userRoutes from "./routes/userRoutes";
-import { authorize } from "./middlewares/authRole";
-import { auth } from "./middlewares/auth";
-import EventController from "./controllers/eventController";
+import eventRoutes from "./routes/eventRoutes";
+import myEventRoutes from "./routes/myEventRoutes";
 
 if (!process.env.jwtPrivateKey)
   throw new Error("FATAL: jwtPrivateKey not defined. ");
@@ -27,20 +26,8 @@ app.use("/api/auth", authRoutes);
 app.use("/api/users/me", userRoutes);
 
 //events
-app.get("/api/events/:id", EventController.getEventById);
-app.get("/api/my-events", auth, EventController.getCurrentOrganizerEvents);
-app.post(
-  "/api/events/",
-  auth,
-  authorize(["organizer", "admin"]),
-  EventController.createEvent,
-);
-app.put(
-  "/api/events/:id",
-  auth,
-  authorize(["admin", "organizer"]),
-  EventController.updateEvent,
-);
+app.use("/api/events", eventRoutes);
+app.use("/api/my-events", myEventRoutes);
 
 app.use(errorHandler);
 const port = process.env.PORT || 3000;
