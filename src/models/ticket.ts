@@ -1,6 +1,6 @@
 import mongoose, { Schema, model } from "mongoose";
 
-interface ITicket {
+export interface ITicket {
   userId: mongoose.Types.ObjectId; // ticket ownser
   eventId: mongoose.Types.ObjectId;
   type: "standard" | "vip" | "early_bird";
@@ -33,5 +33,6 @@ const ticketSchema = new Schema<ITicket>(
   },
   { timestamps: true },
 );
+ticketSchema.index({ userId: 1, eventId: 1 }, { unique: true });
 
 export const Ticket = model<ITicket>("Ticket", ticketSchema);

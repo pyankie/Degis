@@ -1,13 +1,15 @@
 import express from "express";
 import env from "dotenv";
-env.config();
 import mongoose from "mongoose";
+env.config();
 
 import { errorHandler } from "./middlewares/error";
 import authRoutes from "./routes/authRoutes";
 import userRoutes from "./routes/userRoutes";
 import eventRoutes from "./routes/eventRoutes";
 import myEventRoutes from "./routes/myEventRoutes";
+import { auth } from "./middlewares/auth";
+import { rsvpFreeEvent } from "./controllers/ticketController";
 
 if (!process.env.jwtPrivateKey)
   throw new Error("FATAL: jwtPrivateKey not defined. ");
@@ -28,6 +30,8 @@ app.use("/api/users/me", userRoutes);
 //events
 app.use("/api/events", eventRoutes);
 app.use("/api/my-events", myEventRoutes);
+
+app.post("/api/events/:id/rsvp", auth, rsvpFreeEvent);
 
 app.use(errorHandler);
 const port = process.env.PORT || 3000;

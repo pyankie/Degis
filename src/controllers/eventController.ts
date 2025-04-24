@@ -5,6 +5,7 @@ import { NextFunction, Response } from "express";
 
 import { AppError } from "../utils/errors/appError";
 import { AuthRequest } from "../middlewares/auth";
+import objectIdSchema from "../utils/objectIdValidator";
 
 import {
   createEvent,
@@ -25,12 +26,6 @@ import {
 } from "../schemas/event.schema";
 
 import { EventInvitation } from "../models/eventInvitation";
-
-const objectIdSchema = z
-  .string()
-  .refine((val) => mongoose.Types.ObjectId.isValid(val), {
-    message: "invalid object id",
-  });
 
 interface UpdateType extends EventUpdateType {
   slug?: string;
