@@ -21,6 +21,9 @@ export const getEventById = async (eventId: string) => {
 };
 
 export const createEvent = async (eventData: IEventType) => {
+  //TODO: check if the user is an organizer
+  //TODO: add email sending logic upon event creation to invitees (both registered and unregistered users)
+
   const { invitees, ...rest } = eventData;
   const { registeredIds, unregisteredEmails } = await splitInvtees(invitees);
 

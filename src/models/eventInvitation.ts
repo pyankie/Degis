@@ -29,6 +29,8 @@ const eventInvitationSchema = new mongoose.Schema<IEventInvitation>(
   { timestamps: true },
 );
 
+eventInvitationSchema.index({ email: 1, eventId: 1 }, { unique: true });
+
 export const EventInvitation = mongoose.model<IEventInvitation>(
   "EventInvitation",
   eventInvitationSchema,
