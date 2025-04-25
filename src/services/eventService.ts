@@ -4,11 +4,35 @@ import { Event } from "../models/event";
 import User from "../models/user";
 import { EventInvitation } from "../models/eventInvitation";
 import { v4 as uuidv4 } from "uuid";
+import { z } from "zod";
+import { attendeesQuerySchema } from "../schemas/querySchema";
+import { Ticket } from "../models/ticket";
 
 export interface ISplitInvitees {
   registeredIds: mongoose.Types.ObjectId[];
   unregisteredEmails: string[];
 }
+
+type Query = z.infer<typeof attendeesQuerySchema>;
+export const getAttendees = async (eventId: string, pagination: Query) => {
+  const objectId = new Types.ObjectId(eventId);
+  const {
+    page: pageNumber = 1,
+    pageSize: pageSizeNumber = 10,
+    status,
+  } = pagination;
+
+  const skip = (pageNumber - 1) * pageSizeNumber;
+
+  const [attendees, totalAttendees] = await Promise.all([
+    Ticket.find({ eventId: objectId, ...(status && { status }) })
+      .skip(skip)
+      .limit(pageSizeNumber)
+      .select("status userId createdAt type"),
+    Ticket.countDocuments({ eventId: objectId }),
+  ]);
+  return { attendees, totalAttendees };
+};
 
 export const getCurrentOrganizerEvents = async (organizerId: string) => {
   const id = new mongoose.Types.ObjectId(organizerId);

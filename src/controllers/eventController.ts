@@ -8,6 +8,7 @@ import objectIdSchema from "../utils/objectIdValidator";
 import {
   createEvent,
   generateSlug,
+  getAttendees,
   getCurrentOrganizerEvents,
   getEventById,
   splitInvtees,
@@ -51,7 +52,7 @@ export default class EventController {
     const loggedInUserId = req.user?._id;
 
     try {
-      const event = await Event.findById(eventId);
+      const event = await getEventById(eventId);
       if (!event) {
         res.status(404).json({ success: false, message: "Event not found" });
         return;
@@ -70,22 +71,10 @@ export default class EventController {
 
       type Query = z.infer<typeof attendeesQuerySchema>;
 
-      const {
-        page: pageNumber = 1,
-        pageSize: pageSizeNumber = 10,
-        status,
-      } = parseQuery.data as Query;
-
-      const skip = (pageNumber - 1) * pageSizeNumber;
-
-      const [attendees, totalAttendees] = await Promise.all([
-        Ticket.find({ eventId, ...(status && { status }) })
-          .skip(skip)
-          .limit(pageSizeNumber)
-          .select("status userId createdAt type"),
-        Ticket.countDocuments({ eventId }),
-      ]);
-
+      const { attendees, totalAttendees } = await getAttendees(
+        eventId,
+        parseQuery.data as Query,
+      );
       if (!attendees.length) {
         res.status(404).json({ success: false, message: "No attendees found" });
         return;
