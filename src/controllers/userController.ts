@@ -13,8 +13,96 @@ import { registerSchema, loginSchema } from "../schemas/user.schemas";
 import { AppError } from "../utils/errors/appError";
 import { DuplicateKeyError } from "../utils/errors/duplicateKeyError";
 import { AuthRequest } from "../middlewares/auth";
+import { Ticket } from "../models/ticket";
+import mongoose from "mongoose";
+import { Event } from "../models/event";
+import { querySchema } from "../schemas/attendeesQuerySchema";
+import { z } from "zod";
 
 export default class UserController {
+  static getMyEvents = async (
+    req: AuthRequest,
+    res: Response,
+    next: NextFunction,
+  ) => {
+    try {
+      const userId = new mongoose.Types.ObjectId(req.user?._id);
+
+      const schema = querySchema.extend({
+        status: z.enum(["pending", "live", "completed"]).optional(),
+      });
+
+      const parseQuery = schema.safeParse(req.query);
+      if (!parseQuery.success) {
+        const errMessage = parseQuery.error.errors
+          .map((err) => err.message)
+          .join(", ");
+        return next(new AppError(errMessage, 400));
+      }
+
+      const {
+        page: pageNumber = 1,
+        pageSize: pageSizeNumber = 10,
+        status,
+      } = parseQuery.data;
+
+      const skip = (pageNumber - 1) * pageSizeNumber;
+
+      // const ticketQuery = { userId, ...(status && { status }) };
+
+      const ticketQuery = { userId };
+      const [tickets, totalTickets] = await Promise.all([
+        Ticket.find(ticketQuery)
+          .select("eventId")
+          .skip(skip)
+          .limit(pageSizeNumber)
+          .lean(),
+        Ticket.countDocuments(ticketQuery),
+      ]);
+
+      if (!tickets || !tickets.length) {
+        res.status(404).json({ success: false, message: "No event found" });
+        return;
+      }
+      const eventIds = tickets.map((ticket) => ticket.eventId);
+
+      const events = await Event.find({
+        _id: { $in: eventIds },
+        ...(status && { status }),
+      })
+        .select({
+          title: 1,
+          venue: 1,
+          startDate: 1,
+          date: 1,
+          endDate: 1,
+          category: 1,
+        })
+        .lean();
+
+      if (!events || !events.length) {
+        res.status(404).json({ success: false, message: "No event found" });
+        return;
+      }
+
+      res.json({
+        success: true,
+        totalEvents: totalTickets,
+        data: events,
+        pagination: {
+          pageNumber,
+          pageSizeNumber,
+          totalPages: Math.ceil(totalTickets / pageSizeNumber),
+        },
+      });
+    } catch (err: any) {
+      res.status(500).json({
+        success: false,
+        message: "Failed to get events.",
+      });
+    }
+  };
+
   static registerUser = async (
     req: Request,
     res: Response,
