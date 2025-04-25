@@ -8,6 +8,7 @@ export interface IUser {
 }
 
 export interface IUserDocuemnt extends IUser, Document {
+  _id: mongoose.Types.ObjectId;
   role: "user" | "organizer" | "admin";
   createdAt: Date;
   updatedAt: Date;

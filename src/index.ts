@@ -10,6 +10,8 @@ import eventRoutes from "./routes/eventRoutes";
 import myEventRoutes from "./routes/myEventRoutes";
 import { auth } from "./middlewares/auth";
 import { rsvpFreeEvent } from "./controllers/ticketController";
+import { authorize } from "./middlewares/authRole";
+import EventController from "./controllers/eventController";
 
 if (!process.env.jwtPrivateKey)
   throw new Error("FATAL: jwtPrivateKey not defined. ");
@@ -32,6 +34,12 @@ app.use("/api/events", eventRoutes);
 app.use("/api/my-events", myEventRoutes);
 
 app.post("/api/events/:id/rsvp", auth, rsvpFreeEvent);
+app.get(
+  "/api/events/:id/attendees",
+  auth,
+  authorize(["admin", "organizer"]),
+  EventController.getAttendees,
+);
 
 app.use(errorHandler);
 const port = process.env.PORT || 3000;

@@ -1,6 +1,4 @@
-import mongoose from "mongoose";
 import { v4 as uuidv4 } from "uuid";
-import { z } from "zod";
 import { NextFunction, Response } from "express";
 
 import { AppError } from "../utils/errors/appError";
@@ -26,12 +24,96 @@ import {
 } from "../schemas/event.schema";
 
 import { EventInvitation } from "../models/eventInvitation";
+import { Ticket } from "../models/ticket";
+import User from "../models/user";
+import _ from "lodash";
 
 interface UpdateType extends EventUpdateType {
   slug?: string;
 }
 
 export default class EventController {
+  static getAttendees = async (
+    req: AuthRequest,
+    res: Response,
+    next: NextFunction,
+  ) => {
+    const parseEventId = objectIdSchema.safeParse(req.params.id);
+
+    if (!parseEventId.success) {
+      res.status(400).json({ success: false, message: "Invalid event id" });
+      return;
+    }
+
+    const eventId = parseEventId.data;
+    const loggedInUserId = req.user?._id;
+
+    try {
+      const event = await Event.findById(eventId);
+      if (!event) {
+        res.status(404).json({ success: false, message: "Event not found" });
+        return;
+      }
+
+      const organizerId = event.organizerId.toString();
+
+      if (loggedInUserId !== organizerId) {
+        res
+          .status(403)
+          .json({ success: false, message: "Unauthorized. Not your event" });
+        return;
+      }
+
+      const [attendees, totalAttendees] = await Promise.all([
+        Ticket.find({ eventId }).select("status userId createdAt type"),
+        Ticket.countDocuments({ eventId }),
+      ]);
+
+      if (!attendees.length) {
+        res.status(404).json({ success: false, message: "No attendees found" });
+        return;
+      }
+
+      const attendeesIds = attendees.map((att) => att.userId);
+      const users = await User.find({ _id: { $in: attendeesIds } });
+      const usersMap = new Map(
+        users.map((user) => [user._id.toString(), user]),
+      );
+
+      if (!users || !users.length) {
+        res
+          .status(404)
+          .json({ success: false, message: " Failed to get attendees" });
+        return;
+      }
+
+      const attendeesData = attendees.map((att) => {
+        const user = usersMap.get(att.userId.toString());
+
+        return {
+          userId: att.userId,
+          username: user?.username || "[Deleted user]",
+          //TODO: mask emails
+          email: user?.email,
+          ticketType: att.type,
+          ticketStatus: att.status,
+          bookedAt: att.createdAt,
+        };
+      });
+
+      res.json({
+        success: true,
+        data: {
+          eventId,
+          totalAttendees,
+          attendees: attendeesData,
+        },
+      });
+    } catch (err: any) {
+      console.log(err);
+      next(new Error(err.message));
+    }
+  };
   static createEvent = async (
     req: AuthRequest,
     res: Response,
