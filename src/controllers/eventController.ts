@@ -27,6 +27,8 @@ import { EventInvitation } from "../models/eventInvitation";
 import { Ticket } from "../models/ticket";
 import User from "../models/user";
 import _ from "lodash";
+import { querySchema } from "../schemas/attendeesQuerySchema";
+import { z } from "zod";
 
 interface UpdateType extends EventUpdateType {
   slug?: string;
@@ -64,8 +66,23 @@ export default class EventController {
         return;
       }
 
+      const parseQuery = querySchema.safeParse(req.query);
+
+      type Query = z.infer<typeof querySchema>;
+
+      const {
+        page: pageNumber = 1,
+        pageSize: pageSizeNumber = 10,
+        status,
+      } = parseQuery.data as Query;
+
+      const skip = (pageNumber - 1) * pageSizeNumber;
+
       const [attendees, totalAttendees] = await Promise.all([
-        Ticket.find({ eventId }).select("status userId createdAt type"),
+        Ticket.find({ eventId, ...(status && { status }) })
+          .skip(skip)
+          .limit(pageSizeNumber)
+          .select("status userId createdAt type"),
         Ticket.countDocuments({ eventId }),
       ]);
 
