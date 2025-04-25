@@ -5,6 +5,10 @@ import User, { IUser } from "../models/user";
 import { ObjectId, Types } from "mongoose";
 import _ from "lodash";
 import { AppError } from "../utils/errors/appError";
+import { myEventsQuerySchema } from "../schemas/querySchema";
+import { z } from "zod";
+import { Ticket } from "../models/ticket";
+import { Event } from "../models/event";
 
 export interface ILogin {
   usernameOrEmail: string;
@@ -99,4 +103,25 @@ export const deleteUser = async (id: string) => {
   const objectId = new Types.ObjectId(id);
 
   return await User.findByIdAndDelete(objectId);
+};
+
+type QueryData = z.infer<typeof myEventsQuerySchema>;
+export const getUserTickets = async (userId: string, queryData: QueryData) => {
+  const { page: pageNumber = 1, pageSize: pageSizeNumber = 10 } = queryData;
+
+  const skip = (pageNumber - 1) * pageSizeNumber;
+
+  // const ticketQuery = { userId, ...(status && { status }) };
+
+  const ticketQuery = { userId };
+  const [tickets, totalTickets] = await Promise.all([
+    Ticket.find(ticketQuery)
+      .select("eventId")
+      .skip(skip)
+      .limit(pageSizeNumber)
+      .lean(),
+    Ticket.countDocuments(ticketQuery),
+  ]);
+
+  return { tickets, totalTickets };
 };

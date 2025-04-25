@@ -27,7 +27,7 @@ import { EventInvitation } from "../models/eventInvitation";
 import { Ticket } from "../models/ticket";
 import User from "../models/user";
 import _ from "lodash";
-import { querySchema } from "../schemas/attendeesQuerySchema";
+import { attendeesQuerySchema } from "../schemas/querySchema";
 import { z } from "zod";
 
 interface UpdateType extends EventUpdateType {
@@ -66,9 +66,9 @@ export default class EventController {
         return;
       }
 
-      const parseQuery = querySchema.safeParse(req.query);
+      const parseQuery = attendeesQuerySchema.safeParse(req.query);
 
-      type Query = z.infer<typeof querySchema>;
+      type Query = z.infer<typeof attendeesQuerySchema>;
 
       const {
         page: pageNumber = 1,

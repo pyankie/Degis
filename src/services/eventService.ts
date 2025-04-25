@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+import mongoose, { Types } from "mongoose";
 import { IEventType } from "../schemas/event.schema";
 import { Event } from "../models/event";
 import User from "../models/user";
@@ -13,6 +13,25 @@ export interface ISplitInvitees {
 export const getCurrentOrganizerEvents = async (organizerId: string) => {
   const id = new mongoose.Types.ObjectId(organizerId);
   return await Event.find({ organizerId: id });
+};
+
+export const getEvents = async (
+  eventIds: Types.ObjectId[],
+  status?: string,
+) => {
+  return await Event.find({
+    _id: { $in: eventIds },
+    ...(status && { status }),
+  })
+    .select({
+      title: 1,
+      venue: 1,
+      startDate: 1,
+      date: 1,
+      endDate: 1,
+      category: 1,
+    })
+    .lean();
 };
 
 export const getEventById = async (eventId: string) => {

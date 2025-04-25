@@ -12,7 +12,6 @@ import { auth } from "./middlewares/auth";
 import { rsvpFreeEvent } from "./controllers/ticketController";
 import { authorize } from "./middlewares/authRole";
 import EventController from "./controllers/eventController";
-import UserController from "./controllers/userController";
 
 if (!process.env.jwtPrivateKey)
   throw new Error("FATAL: jwtPrivateKey not defined. ");
