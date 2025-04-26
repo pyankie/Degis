@@ -320,4 +320,37 @@ export default class EventController {
       return next(new Error("Internal server error"));
     }
   };
+  static getEventTickets = async (
+    req: AuthRequest,
+    res: Response,
+    next: NextFunction,
+  ) => {
+    const parseEventId = objectIdSchema.safeParse(req.params?.id);
+
+    if (!parseEventId.success) {
+      res.status(400).json({ success: false, message: "Invalid event id" });
+      return;
+    }
+
+    const eventId = parseEventId.data;
+    try {
+      const event = await getEventById(eventId);
+      if (!event) {
+        res.status(404).json({ success: false, message: "Event not found" });
+        return;
+      }
+      const tickets = event.ticketTypes?.map((ticket) => {
+        return {
+          ticketType: ticket.name,
+          price: ticket.price,
+          capacity: ticket.capacity,
+        };
+      });
+
+      res.json({ success: true, data: tickets });
+    } catch (err: any) {
+      console.log(err);
+      next(new Error(err.message));
+    }
+  };
 }

@@ -14,6 +14,7 @@ router.get(
   EventController.getAttendees,
 );
 
+router.get("/:id/tickets", auth, EventController.getEventTickets);
 router.post(
   "/",
   auth,
