@@ -45,13 +45,10 @@ export default class UserController {
       }
 
       const eventIds = tickets.map((ticket) => ticket.eventId);
-      const {
-        page: pageNumber = 1,
-        pageSize: pageSizeNumber = 10,
-        status,
-      } = parseQuery.data;
+      const { page: pageNumber = 1, pageSize: pageSizeNumber = 10 } =
+        parseQuery.data;
 
-      const events = await getEvents(eventIds, status);
+      const events = await getEvents(eventIds);
 
       if (!events || !events.length) {
         res.status(404).json({ success: false, message: "No event found" });

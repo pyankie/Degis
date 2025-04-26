@@ -3,8 +3,16 @@ const router = express.Router();
 import EventController from "../controllers/eventController";
 import { auth } from "../middlewares/auth";
 import { authorize } from "../middlewares/authRole";
+import { rsvpFreeEvent } from "../controllers/ticketController";
 
 router.get("/:id", EventController.getEventById);
+
+router.get(
+  "/:id/attendees",
+  auth,
+  authorize(["admin", "organizer"]),
+  EventController.getAttendees,
+);
 
 router.post(
   "/",
@@ -12,6 +20,9 @@ router.post(
   authorize(["organizer", "admin"]),
   EventController.createEvent,
 );
+
+router.post("/:id/rsvp", auth, rsvpFreeEvent);
+
 router.put(
   "/:id",
   auth,

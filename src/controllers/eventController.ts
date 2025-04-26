@@ -67,9 +67,19 @@ export default class EventController {
         return;
       }
 
-      const parseQuery = attendeesQuerySchema.safeParse(req.query);
+      const parseQuery = attendeesQuerySchema.strict().safeParse(req.query);
+
+      if (!parseQuery.success) {
+        const errMessage = parseQuery.error.errors
+          .map((err) => err.message)
+          .join(", ");
+        return next(new AppError(errMessage, 400));
+      }
 
       type Query = z.infer<typeof attendeesQuerySchema>;
+
+      const { page = 1 } = parseQuery.data;
+      const pageSize = parseQuery.data.pageSize ? parseQuery.data.pageSize : 10;
 
       const { attendees, totalAttendees } = await getAttendees(
         eventId,
@@ -102,7 +112,7 @@ export default class EventController {
           //TODO: mask emails
           email: user?.email,
           ticketType: att.type,
-          ticketStatus: att.status,
+          // ticketStatus: att.status,
           bookedAt: att.createdAt,
         };
       });
@@ -113,6 +123,11 @@ export default class EventController {
           eventId,
           totalAttendees,
           attendees: attendeesData,
+          pagination: {
+            page,
+            pageSize,
+            totalPages: Math.ceil(totalAttendees / pageSize),
+          },
         },
       });
     } catch (err: any) {

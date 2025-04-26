@@ -16,19 +16,15 @@ export interface ISplitInvitees {
 type Query = z.infer<typeof attendeesQuerySchema>;
 export const getAttendees = async (eventId: string, pagination: Query) => {
   const objectId = new Types.ObjectId(eventId);
-  const {
-    page: pageNumber = 1,
-    pageSize: pageSizeNumber = 10,
-    status,
-  } = pagination;
+  const { page: pageNumber = 1, pageSize: pageSizeNumber = 10 } = pagination;
 
   const skip = (pageNumber - 1) * pageSizeNumber;
 
   const [attendees, totalAttendees] = await Promise.all([
-    Ticket.find({ eventId: objectId, ...(status && { status }) })
+    Ticket.find({ eventId: objectId })
       .skip(skip)
       .limit(pageSizeNumber)
-      .select("status userId createdAt type"),
+      .select("userId createdAt type"),
     Ticket.countDocuments({ eventId: objectId }),
   ]);
   return { attendees, totalAttendees };
