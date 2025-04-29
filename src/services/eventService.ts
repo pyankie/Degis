@@ -7,6 +7,7 @@ import { v4 as uuidv4 } from "uuid";
 import { z } from "zod";
 import { attendeesQuerySchema } from "../schemas/querySchema";
 import { Ticket } from "../models/ticket";
+import { sendInviteEmail } from "../utils/sendInviteEmail";
 
 export interface ISplitInvitees {
   registeredIds: mongoose.Types.ObjectId[];
@@ -86,6 +87,10 @@ export const createEvent = async (eventData: IEventType) => {
     });
 
     await EventInvitation.insertMany(unregisteredInvitees);
+
+    for (let inv of unregisteredInvitees) {
+      await sendInviteEmail(inv.email, savedEvent.title, inv.token);
+    }
   }
   return savedEvent;
 };
