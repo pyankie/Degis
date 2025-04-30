@@ -100,6 +100,7 @@ export default class UserController {
       if (uuidToken) {
         const invitation = await EventInvitation.findOne({
           token: uuidToken,
+          status: "pending",
         });
 
         if (!invitation) {
@@ -136,8 +137,15 @@ export default class UserController {
 
         console.log("user who existed: ", user);
         event.invitees?.push(user!._id);
-        await event.save();
+
         invitation.status = "accepted";
+        invitation.expiresAt = new Date();
+
+        Promise.all([await event.save(), await invitation.save()]).catch(
+          (err) => {
+            console.log("Error saving event or invitation:", err);
+          },
+        );
 
         const newTicket = await createFreeTicket({
           userId: user!._id.toString(),
