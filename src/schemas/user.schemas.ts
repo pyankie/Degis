@@ -20,6 +20,13 @@ export const registerSchema = z.object({
   username: usernameSchema,
   email: emailSchema,
   password: passwordSchema,
+  token: z
+    .string()
+    .regex(
+      /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/,
+      { message: "Invalid token" },
+    )
+    .optional(),
 });
 
 export const loginSchema = z.object({
