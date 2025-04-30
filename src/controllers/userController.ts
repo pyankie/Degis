@@ -16,6 +16,9 @@ import { DuplicateKeyError } from "../utils/errors/duplicateKeyError";
 import { AuthRequest } from "../middlewares/auth";
 import { myEventsQuerySchema } from "../schemas/querySchema";
 import { getEvents } from "../services/eventService";
+import { EventInvitation } from "../models/eventInvitation";
+import { Event } from "../models/event";
+import { createFreeTicket } from "../services/ticketService";
 
 export default class UserController {
   static getMyEvents = async (
@@ -92,12 +95,69 @@ export default class UserController {
         return next(new AppError(errMessage, 400));
       }
 
-      const result = await createUser(userData);
+      const { email: insertedEmail, token: uuidToken } = validation.data;
 
-      res.header("x-auth-token", result.token).status(200).json({
-        success: true,
-        data: result.user,
-      });
+      if (uuidToken) {
+        const invitation = await EventInvitation.findOne({
+          token: uuidToken,
+        });
+
+        if (!invitation) {
+          res.status(400).json({ success: false, message: "Invalid token" });
+          return;
+        }
+
+        const isSameEmail = invitation.email === insertedEmail;
+        if (!isSameEmail) {
+          res.status(400).json({
+            success: false,
+            message: "Different from invitation email",
+          });
+          return;
+        }
+
+        const { eventId, email } = invitation;
+
+        const event = await Event.findById(eventId);
+
+        if (!event) {
+          console.log("Event not found for token:", uuidToken);
+          res.status(400).json({ success: false, message: "Invalid token" });
+          return;
+        }
+
+        const { user, token: jwtToken } = await createUser(userData);
+
+        if (!user) {
+          console.log("user not found for token:", uuidToken);
+          res.status(400).json({ success: false, message: "Invalid token" });
+          return;
+        }
+
+        console.log("user who existed: ", user);
+        event.invitees?.push(user!._id);
+        await event.save();
+        invitation.status = "accepted";
+
+        const newTicket = await createFreeTicket({
+          userId: user!._id.toString(),
+          eventId: eventId.toString(),
+        });
+
+        console.log("New Ticket:", newTicket);
+
+        res.header("x-auth-token", jwtToken).status(200).json({
+          success: true,
+          data: user,
+        });
+      } else {
+        const result = await createUser(userData);
+
+        res.header("x-auth-token", result.token).status(200).json({
+          success: true,
+          data: result.user,
+        });
+      }
     } catch (err: any) {
       if (err.code === 11000) {
         const field = Object.keys(err.keyPattern)[0];
