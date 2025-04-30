@@ -76,7 +76,6 @@ export default class UserController {
       next(new Error(err.message));
     }
   };
-
   static registerUser = async (
     req: Request,
     res: Response,
