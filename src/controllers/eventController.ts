@@ -25,12 +25,10 @@ import {
 } from "../schemas/event.schema";
 
 import { EventInvitation } from "../models/eventInvitation";
-import { Ticket } from "../models/ticket";
 import User from "../models/user";
 import _ from "lodash";
 import { attendeesQuerySchema } from "../schemas/querySchema";
 import { z } from "zod";
-import { createNotification } from "../services/notificationService";
 
 interface UpdateType extends EventUpdateType {
   slug?: string;
