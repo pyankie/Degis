@@ -60,6 +60,7 @@ export const rsvpFreeEvent = async (
 
     res
       .status(201)
+      //TODO: Refine RSVPing response
       .json({ success: true, rsvp, message: "RSVPed successfully" });
   } catch (err: any) {
     if (err.code === 11000) {

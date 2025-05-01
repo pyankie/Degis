@@ -12,7 +12,10 @@ export const createNotification = async (data: INotification) => {
 };
 
 export const getNotifications = async (userId: string) => {
-  return await Notification.find({ userId })
-    .populate("eventId")
-    .sort({ createdAt: -1 });
+  //TODO: add pagination page and limit
+  //TODO: add query params: ?status=all, unread: default
+  return await Notification.find({ userId, status: "unread" })
+    .select("-__v")
+    .sort({ createdAt: -1 })
+    .populate("eventId", "title", "Event");
 };

@@ -6,6 +6,7 @@ const router = express.Router();
 
 router.get("/events", auth, UserController.getMyEvents);
 router.get("/:id/rsvp", auth, rsvpFreeEvent);
+router.get("/notifications", auth, UserController.getMyNotifications);
 router.put("/", auth, UserController.updateUser);
 router.delete("/", auth, UserController.deleteUser);
 

@@ -19,6 +19,7 @@ import { getEvents } from "../services/eventService";
 import { EventInvitation } from "../models/eventInvitation";
 import { Event } from "../models/event";
 import { createFreeTicket } from "../services/ticketService";
+import { getNotifications } from "../services/notificationService";
 
 export default class UserController {
   static getMyEvents = async (
@@ -287,6 +288,33 @@ export default class UserController {
         message: "Failed to delete account.",
         error: process.env.NODE_ENV === "development" ? err.message : undefined,
       });
+    }
+  };
+
+  static getMyNotifications = async (
+    req: AuthRequest,
+    res: Response,
+    next: NextFunction,
+  ) => {
+    const userId = req.user!._id;
+
+    try {
+      const notifications = await getNotifications(userId);
+      if (!notifications || !notifications.length) {
+        res.status(404).json({
+          success: false,
+          message: "No notification found",
+        });
+        return;
+      }
+
+      res.json({ success: true, data: notifications });
+    } catch (err: any) {
+      res.status(500).json({
+        success: false,
+        message: "Failed to get notifications.",
+      });
+      next(new Error(err.message));
     }
   };
 }
