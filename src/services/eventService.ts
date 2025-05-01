@@ -8,6 +8,8 @@ import { z } from "zod";
 import { attendeesQuerySchema } from "../schemas/querySchema";
 import { Ticket } from "../models/ticket";
 import { sendInviteEmail } from "../utils/sendInviteEmail";
+import { createNotification } from "./notificationService";
+import { INotification } from "../models/notification";
 
 export interface ISplitInvitees {
   registeredIds: mongoose.Types.ObjectId[];
@@ -79,7 +81,7 @@ export const createEvent = async (eventData: IEventType) => {
   if (unregisteredEmails.length > 0) {
     const unregisteredInvitees = unregisteredEmails.map((email) => {
       return {
-        eventId: newEvent._id,
+        eventId: newEvent._id, //FIX: change newEvent to savedEvent
         token: uuidv4(),
         email,
         expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
@@ -92,6 +94,16 @@ export const createEvent = async (eventData: IEventType) => {
       await sendInviteEmail(inv.email, savedEvent.title, inv.token);
     }
   }
+  if (registeredIds.length > 0)
+    for (let userId of registeredIds) {
+      await createNotification({
+        userId,
+        eventId: savedEvent._id,
+        type: "invite",
+        message: savedEvent.description,
+        link: `/api/events/${savedEvent._id}/rsvp`,
+      } as INotification);
+    }
   return savedEvent;
 };
 

@@ -8,6 +8,8 @@ import authRoutes from "./routes/authRoutes";
 import userRoutes from "./routes/userRoutes";
 import eventRoutes from "./routes/eventRoutes";
 import myEventRoutes from "./routes/myEventRoutes";
+import UserController from "./controllers/userController";
+import { auth } from "./middlewares/auth";
 
 if (!process.env.jwtPrivateKey)
   throw new Error("FATAL: jwtPrivateKey not defined. ");
@@ -30,6 +32,8 @@ app.use("/api/me/", userRoutes);
 app.use("/api/events", eventRoutes);
 app.use("/api/my-events", myEventRoutes);
 
+//notifications
+// app.use("/api/notifications", auth, UserController.getMyNotifications);
 app.use(errorHandler);
 const port = process.env.PORT || 3000;
 
