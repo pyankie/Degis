@@ -23,7 +23,6 @@ app.use(express.urlencoded({ extended: true }));
 
 // users
 app.use("/api/auth", authRoutes);
-app.use("/api/users/me", userRoutes);
 app.use("/api/me/", userRoutes);
 
 //events
