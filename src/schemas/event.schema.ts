@@ -1,4 +1,5 @@
 import { z } from "zod";
+import objectIdSchema from "../utils/objectIdValidator";
 
 const zodInviteeSchema = z.string().email();
 const ticketTypeSchema = z.object({
@@ -50,7 +51,10 @@ const zodEventSchema = z
       "comedy",
       "webinar",
     ]),
-    coverImage: z.string().optional(),
+    coverImage: z.object({
+      id: objectIdSchema,
+      url: z.string(),
+    }),
     isPrivate: booleanSchema,
   })
   .superRefine((data, ctx) => {
@@ -139,7 +143,12 @@ const zodEventUpdateSchema = z
       )
       .optional(),
     capacity: z.coerce.number().min(0).optional(),
-    coverImage: z.string().optional(),
+    coverImage: z
+      .object({
+        id: objectIdSchema,
+        url: z.string(),
+      })
+      .optional(),
     isPrivate: z.boolean().optional(),
     invitees: z.array(zodInviteeSchema).optional(),
   })

@@ -66,11 +66,12 @@ export const createEvent = async (eventData: IEventType) => {
   //TODO: check if the user is an organizer
   //TODO: add email sending logic upon event creation to invitees (both registered and unregistered users)
 
-  const { invitees, ...rest } = eventData;
+  const { invitees, coverImage, ...rest } = eventData;
   const { registeredIds, unregisteredEmails } = await splitInvtees(invitees);
 
   const newEvent = new Event({
     ...rest,
+    coverImage: coverImage.url,
     slug: generateSlug(rest.title),
     organizerId: new mongoose.Types.ObjectId(rest.organizerId),
     invitees: registeredIds,
