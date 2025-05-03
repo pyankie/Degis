@@ -3,13 +3,13 @@ import { PutObjectCommand, PutObjectCommandInput } from "@aws-sdk/client-s3";
 import { Types } from "mongoose";
 import { File } from "../models/file";
 
-export const upload = async (
-  file: Express.Multer.File,
-  userId: Types.ObjectId,
-) => {
+export const upload = async (file: Express.Multer.File, userID: string) => {
+  const userId = new Types.ObjectId(userID);
+
   const bucket = file.mimetype.startsWith("image")
     ? process.env.R2_IMAGE_BUCKET!
     : process.env.R2_KYC_BUCKET!;
+
   const key = `${userId}/${Date.now()}-${file.originalname}`;
 
   const params: PutObjectCommandInput = {

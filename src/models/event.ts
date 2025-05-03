@@ -1,7 +1,7 @@
 import mongoose, { Document } from "mongoose";
 
 // (form payload)
-interface IEvent {
+export interface IEvent {
   title: string;
   description: string;
   date: Date;
