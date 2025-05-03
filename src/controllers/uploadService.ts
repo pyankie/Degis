@@ -15,7 +15,7 @@ export const upload = async (file: Express.Multer.File, userID: string) => {
   const params: PutObjectCommandInput = {
     Bucket: bucket,
     Key: key,
-    Body: require("fs").readFileSync(file.path),
+    Body: file.buffer,
     ContentType: file.mimetype,
     ACL: file.mimetype.startsWith("image") ? "public-read" : undefined,
   };
