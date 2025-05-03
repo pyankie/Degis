@@ -29,6 +29,8 @@ import User from "../models/user";
 import _ from "lodash";
 import { attendeesQuerySchema } from "../schemas/querySchema";
 import { z } from "zod";
+import { Types } from "mongoose";
+import { File } from "../models/file";
 
 interface UpdateType extends EventUpdateType {
   slug?: string;
@@ -169,6 +171,20 @@ export default class EventController {
           .json({ success: false, message: "Unable to create an event." });
         return;
       }
+
+      const eventId = newEvent._id;
+      const eventImageId = new Types.ObjectId(validData.coverImage.id);
+
+      const fileDoc = await File.findById(eventImageId);
+      if (!fileDoc) {
+        res
+          .status(400)
+          .json({ success: false, message: "Invalid cover image id" });
+        return;
+      }
+
+      fileDoc.eventId = eventId as Types.ObjectId;
+      await fileDoc.save();
 
       res.json({ success: true, data: newEvent });
     } catch (err: any) {
