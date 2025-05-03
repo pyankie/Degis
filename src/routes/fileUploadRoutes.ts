@@ -1,7 +1,8 @@
-import express, { Request } from "express";
+import express, { NextFunction, Response } from "express";
 import { creatUploadMiddleware } from "../middlewares/upload";
 import { upload } from "../controllers/uploadService";
 import { auth, AuthRequest } from "../middlewares/auth";
+import { multerErrorMiddleware } from "../middlewares/error";
 
 const router = express.Router();
 
@@ -9,7 +10,8 @@ router.post(
   "/",
   auth,
   creatUploadMiddleware("coverImage"),
-  async (req: AuthRequest, res, next) => {
+  multerErrorMiddleware,
+  async (req: AuthRequest, res: Response, next: NextFunction) => {
     const file = req.file!;
     const userId = req.user!._id;
 
