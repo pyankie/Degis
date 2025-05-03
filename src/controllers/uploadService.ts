@@ -32,5 +32,5 @@ export const upload = async (file: Express.Multer.File, userID: string) => {
     size: file.size,
   });
 
-  return fileDoc;
+  return { fileDoc, key };
 };
