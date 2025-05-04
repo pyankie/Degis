@@ -1,6 +1,6 @@
 import express, { NextFunction, Response } from "express";
 import { creatUploadMiddleware } from "../middlewares/upload";
-import { upload } from "../controllers/uploadService";
+import { upload } from "../services/uploadService";
 import { auth, AuthRequest } from "../middlewares/auth";
 import { multerErrorMiddleware } from "../middlewares/error";
 
