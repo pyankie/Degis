@@ -27,7 +27,7 @@ import {
 import { EventInvitation } from "../models/eventInvitation";
 import User from "../models/user";
 import _ from "lodash";
-import { attendeesQuerySchema } from "../schemas/querySchema";
+import { attendeesQuerySchema } from "../schemas/query.schema";
 import { z } from "zod";
 import { Types } from "mongoose";
 import { File } from "../models/file";

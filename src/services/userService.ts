@@ -5,7 +5,7 @@ import User, { IUser } from "../models/user";
 import { ObjectId, Types } from "mongoose";
 import _ from "lodash";
 import { AppError } from "../utils/errors/appError";
-import { myEventsQuerySchema } from "../schemas/querySchema";
+import { myEventsQuerySchema } from "../schemas/query.schema";
 import { z } from "zod";
 import { Ticket } from "../models/ticket";
 import { Event } from "../models/event";

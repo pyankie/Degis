@@ -5,7 +5,7 @@ import User from "../models/user";
 import { EventInvitation } from "../models/eventInvitation";
 import { v4 as uuidv4 } from "uuid";
 import { z } from "zod";
-import { attendeesQuerySchema } from "../schemas/querySchema";
+import { attendeesQuerySchema } from "../schemas/query.schema";
 import { Ticket } from "../models/ticket";
 import { sendInviteEmail } from "../utils/sendInviteEmail";
 import { createNotification } from "./notificationService";

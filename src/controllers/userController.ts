@@ -14,7 +14,7 @@ import { registerSchema, loginSchema } from "../schemas/user.schemas";
 import { AppError } from "../utils/errors/appError";
 import { DuplicateKeyError } from "../utils/errors/duplicateKeyError";
 import { AuthRequest } from "../middlewares/auth";
-import { myEventsQuerySchema } from "../schemas/querySchema";
+import { myEventsQuerySchema } from "../schemas/query.schema";
 import { getEvents } from "../services/eventService";
 import { EventInvitation } from "../models/eventInvitation";
 import { Event } from "../models/event";
