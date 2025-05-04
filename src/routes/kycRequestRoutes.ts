@@ -2,7 +2,11 @@ import express from "express";
 import { auth } from "../middlewares/auth";
 import { multerErrorMiddleware } from "../middlewares/error";
 import { creatUploadMiddleware } from "../middlewares/upload";
-import { creatKycRequest } from "../controllers/kycRequestController";
+import {
+  creatKycRequest,
+  verifyKycRequest,
+} from "../controllers/kycRequestController";
+import { authorize } from "../middlewares/authRole";
 
 const router = express.Router();
 
@@ -14,5 +18,6 @@ router.post(
   multerErrorMiddleware,
   creatKycRequest,
 );
+router.put("/kyc/:id", auth, authorize(["admin"]), verifyKycRequest);
 
 export default router;

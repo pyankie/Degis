@@ -33,6 +33,9 @@ app.use("/api/my-events", myEventRoutes);
 app.use("/api/uploads", uploadRoutes);
 app.use("/api/organizers", kycRequestRoutes);
 
+//admin
+app.use("/api/admin/", kycRequestRoutes);
+
 app.use(errorHandler);
 const port = process.env.PORT || 3000;
 
