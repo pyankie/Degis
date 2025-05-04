@@ -3,15 +3,13 @@ import env from "dotenv";
 import mongoose from "mongoose";
 env.config();
 
-import { errorHandler, multerErrorMiddleware } from "./middlewares/error";
+import { errorHandler } from "./middlewares/error";
 import authRoutes from "./routes/authRoutes";
 import userRoutes from "./routes/userRoutes";
 import eventRoutes from "./routes/eventRoutes";
 import myEventRoutes from "./routes/myEventRoutes";
 import uploadRoutes from "./routes/fileUploadRoutes";
-import { creatKycRequest } from "./controllers/kycRequestController";
-import { creatUploadMiddleware } from "./middlewares/upload";
-import { auth } from "./middlewares/auth";
+import kycRequestRoutes from "./routes/kycRequestRoutes";
 
 if (!process.env.jwtPrivateKey)
   throw new Error("FATAL: jwtPrivateKey not defined. ");
@@ -33,13 +31,7 @@ app.use("/api/me/", userRoutes);
 app.use("/api/events", eventRoutes);
 app.use("/api/my-events", myEventRoutes);
 app.use("/api/uploads", uploadRoutes);
-app.post(
-  "/api/organizers/kyc",
-  auth,
-  creatUploadMiddleware("kycDocument"),
-  multerErrorMiddleware,
-  creatKycRequest,
-);
+app.use("/api/organizers", kycRequestRoutes);
 
 app.use(errorHandler);
 const port = process.env.PORT || 3000;
