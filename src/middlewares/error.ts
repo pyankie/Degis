@@ -24,9 +24,12 @@ export const multerErrorMiddleware = (
   res: Response,
   next: NextFunction,
 ) => {
+  if (err instanceof AppError) {
+    return next(new AppError(`${err.message}`, err.statusCode));
+  }
   if (err instanceof MulterError) {
     if (err.code === "LIMIT_UNEXPECTED_FILE") {
-      return next(new AppError(`Unexpeced file field ${err.field}`, 400));
+      return next(new AppError(`Unexpeced field ${err.field}`, 400));
     }
     if (err.code === "LIMIT_FILE_SIZE") {
       return next(new AppError("File size exceeds 1MB limit", 400));
