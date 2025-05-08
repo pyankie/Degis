@@ -8,3 +8,7 @@ export const attendeesQuerySchema = z.object({
 export const myEventsQuerySchema = attendeesQuerySchema.extend({
   status: z.enum(["pending", "live", "completed"]).optional(),
 });
+
+export const kycQuerySchema = attendeesQuerySchema.extend({
+  status: z.enum(["pending", "verified", "rejected"]).optional(),
+});
