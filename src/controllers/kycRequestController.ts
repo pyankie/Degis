@@ -9,6 +9,8 @@ import _ from "lodash";
 import { kycRequestStatusSchema } from "../schemas/kycStatus.schema";
 import { Types } from "mongoose";
 import objectIdSchema from "../utils/objectIdValidator";
+import { kycQuerySchema } from "../schemas/query.schema";
+import { getKycRequests } from "../services/adminService";
 
 export default class KycRequestController {
   static creatKycRequest = async (
@@ -44,6 +46,46 @@ export default class KycRequestController {
     }
   };
 
+  static getKycRequests = async (
+    req: AuthRequest,
+    res: Response,
+    next: NextFunction,
+  ) => {
+    try {
+      const parsePagination = kycQuerySchema.safeParse(req.query);
+
+      if (!parsePagination.success) {
+        res.status(400).json({
+          success: false,
+          message: parsePagination.error.errors[0].message,
+        });
+        return;
+      }
+      const pagination = parsePagination.data;
+
+      const requests = await getKycRequests(pagination);
+      if (!requests || !requests.length) {
+        res.status(404).json({
+          success: false,
+          message: "No kyc request found",
+        });
+      }
+
+      res.json({
+        success: true,
+        data: requests.map((request) =>
+          _.omit(request.toObject(), ["__v", "userId"]),
+        ),
+        pagination: {
+          page: pagination.page ?? 1,
+          pageSize: pagination.pageSize ?? 10,
+          status: pagination.status ?? "pending",
+        },
+      });
+    } catch (err: any) {
+      next(new Error(err.message));
+    }
+  };
   static verifyKycRequest = async (
     req: AuthRequest,
     res: Response,
