@@ -10,6 +10,7 @@ import eventRoutes from "./routes/eventRoutes";
 import myEventRoutes from "./routes/myEventRoutes";
 import uploadRoutes from "./routes/fileUploadRoutes";
 import kycRequestRoutes from "./routes/kycRequestRoutes";
+import adminRoutes from "./routes/adminRoutes";
 
 if (!process.env.jwtPrivateKey)
   throw new Error("FATAL: jwtPrivateKey not defined. ");
@@ -34,7 +35,7 @@ app.use("/api/uploads", uploadRoutes);
 app.use("/api/organizers", kycRequestRoutes);
 
 //admin
-app.use("/api/admin/", kycRequestRoutes);
+app.use("/api/admin/", adminRoutes);
 
 app.use(errorHandler);
 const port = process.env.PORT || 3000;
