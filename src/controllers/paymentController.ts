@@ -7,7 +7,7 @@ import axios from "axios";
 import { createPaidTicket } from "../services/ticketService";
 
 export class PaymentController {
-  static processPayment = async (
+  static initiatePayment = async (
     req: AuthRequest,
     res: Response,
     next: NextFunction,
