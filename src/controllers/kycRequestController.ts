@@ -11,6 +11,7 @@ import { Types } from "mongoose";
 import objectIdSchema from "../utils/objectIdValidator";
 import { kycQuerySchema } from "../schemas/query.schema";
 import { getKycRequests } from "../services/adminService";
+import User from "../models/user";
 
 export default class KycRequestController {
   static creatKycRequest = async (
@@ -126,6 +127,10 @@ export default class KycRequestController {
       if (status === "rejected")
         kycDoc.rejectionReason = reason || "reason not found";
       else kycDoc.rejectionReason = undefined;
+
+      const role = status === "verified" ? "organizer" : "user";
+      const userId = new Types.ObjectId(kycDoc.userId);
+      await User.findByIdAndUpdate(userId, { $set: { role } }, { new: true });
 
       const reviewedDoc = await kycDoc.save();
 
