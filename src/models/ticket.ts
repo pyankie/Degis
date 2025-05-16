@@ -6,6 +6,8 @@ export interface ITicket {
   type: "standard" | "vip" | "early_bird";
   price: number; // 0 for free events
   qrCode: string;
+  paymentStatus: "pending" | "completed" | "failed";
+  transactionRef: string;
   status: "active" | "used" | "transferred";
   originalOwnerId?: mongoose.Types.ObjectId; // for trackingf transfer
   createdAt: Date;
@@ -28,6 +30,12 @@ const ticketSchema = new Schema<ITicket>(
       enum: ["active", "used", "transferred"],
       default: "active",
     },
+    paymentStatus: {
+      type: String,
+      enum: ["pending", "completed", "failed"],
+      default: "pending",
+    },
+    transactionRef: { type: String, required: true },
     originalOwnerId: { type: Schema.Types.ObjectId, ref: "User" },
     createdAt: { type: Date, default: Date.now },
   },
