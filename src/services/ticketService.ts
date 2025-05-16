@@ -11,11 +11,14 @@ export const createFreeTicket = async (data: ITicket) => {
   const userId = new Types.ObjectId(data.userId);
   const eventId = new Types.ObjectId(data.eventId);
 
+  const txRef = `free-${uuid}`;
   return await Ticket.create({
     userId,
     eventId,
     price: 0,
     qrCode: uuid(),
+    paymentStatus: "completed",
+    transactionRef: txRef,
     originalOwnerId: userId,
   });
 };
