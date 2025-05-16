@@ -11,4 +11,11 @@ router.get(
   KycRequestController.getKycRequests,
 );
 
+router.put(
+  "/kycs/:id",
+  auth,
+  authorize(["admin"]),
+  KycRequestController.verifyKycRequest,
+);
+
 export default router;
