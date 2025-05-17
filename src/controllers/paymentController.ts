@@ -6,6 +6,7 @@ import { getEventById } from "../services/eventService";
 import axios from "axios";
 import { createPaidTicket } from "../services/ticketService";
 import { Ticket } from "../models/ticket";
+import crypto from "crypto";
 
 export class PaymentController {
   static initiatePayment = async (
@@ -122,6 +123,25 @@ export class PaymentController {
           },
         },
       );
+
+      // const chapaSignature = response.headers.get("x-chapa-signature");
+
+      const chapaSignature = req.headers["x-chapa-signature"];
+      const secret = process.env.CHAPA_WEBHOOK_SECRET_KEY!;
+      const computedSignature = crypto
+        .createHmac("sha256", secret)
+        .update(JSON.stringify(req.body))
+        .digest("hex");
+
+      if (!chapaSignature) {
+        res.status(401).json({ message: "Missing signature" });
+        return;
+      }
+
+      if (computedSignature !== chapaSignature) {
+        res.status(401).json({ message: "Invalid signature" });
+        return;
+      }
 
       if (response.data.status === "success") {
         await Ticket.updateOne(
