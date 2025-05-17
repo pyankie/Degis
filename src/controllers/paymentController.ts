@@ -5,6 +5,7 @@ import { v4 as uuidv4 } from "uuid";
 import { getEventById } from "../services/eventService";
 import axios from "axios";
 import { createPaidTicket } from "../services/ticketService";
+import { Ticket } from "../models/ticket";
 
 export class PaymentController {
   static initiatePayment = async (
@@ -84,9 +85,66 @@ export class PaymentController {
         txRef,
       });
 
+      const success = response.data.status === "success" ? true : false;
+      const message = success ? "Payment initiated" : "Payment failed";
       res.json({
-        success: true,
-        checkoutUrl: response.data.data.checkout_url,
+        success,
+        message,
+      });
+    } catch (err: any) {
+      next(new Error(err.message));
+    }
+  };
+
+  static handleChapaWebhook = async (
+    req: AuthRequest,
+    res: Response,
+    next: NextFunction,
+  ) => {
+    try {
+      //TODO: consider checking the signature of the webhook
+      const { status, tx_ref } = req.body;
+
+      if (!tx_ref || status !== "success") {
+        res.status(400).json({
+          success: false,
+          message: "Invalid webhook data",
+        });
+        return;
+      }
+
+      const response = await axios.get(
+        `https://api.chapa.co/v1/transaction/verify/${tx_ref}`,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${process.env.CHAPA_TEST_SECRET_KEY}`,
+          },
+        },
+      );
+
+      if (response.data.status === "success") {
+        await Ticket.updateOne(
+          //TODO: consider indexing transactionRef
+          { transactionRef: tx_ref },
+          { paymentStatus: "completed" },
+        );
+      } else {
+        await Ticket.updateOne(
+          { transactionRef: tx_ref },
+          { paymentStatus: "failed" },
+        );
+      }
+
+      const success = response.data.status === "success" ? true : false;
+      const message =
+        response.data.status === "success"
+          ? "Payment successful"
+          : "Payment failed";
+
+      res.status(200).json({
+        success,
+        message,
       });
     } catch (err: any) {
       next(new Error(err.message));
