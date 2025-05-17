@@ -12,6 +12,7 @@ import uploadRoutes from "./routes/fileUploadRoutes";
 import kycRequestRoutes from "./routes/kycRequestRoutes";
 import adminRoutes from "./routes/adminRoutes";
 import paymentRoutes from "./routes/paymentRoutes";
+import webhookRoutes from "./routes/webhookRoutes";
 
 if (!process.env.jwtPrivateKey)
   throw new Error("FATAL: jwtPrivateKey not defined. ");
@@ -40,6 +41,9 @@ app.use("/api/admin/", adminRoutes);
 
 //payment
 app.use("/api/payments", paymentRoutes);
+
+//webhook
+app.use("/api/payments", webhookRoutes);
 
 app.use(errorHandler);
 const port = process.env.PORT || 3000;
