@@ -13,6 +13,12 @@ export const errorHandler = (
     return;
   }
 
+  if (err instanceof SyntaxError && err.message.includes("JSON")) {
+    console.error("SyntaxError:", err.message);
+    res.status(400).json({ success: false, message: "Invalid JSON payload" });
+    return;
+  }
+
   console.error("Unhandled Error:", err);
   res.status(500).json({ error: "Internal Server Error." });
   return;
