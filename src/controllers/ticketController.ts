@@ -4,6 +4,10 @@ import { AuthRequest } from "../middlewares/auth";
 import objectIdSchema from "../utils/objectIdValidator";
 import { Event } from "../models/event";
 import { createFreeTicket } from "../services/ticketService";
+import { Ticket } from "../models/ticket";
+import { extractError } from "../utils/validationErrorExtractor";
+import { emailSchema } from "../schemas/user.schemas";
+import { getUserByEmailOrUsername } from "../services/userService";
 
 export const rsvpFreeEvent = async (
   req: AuthRequest,
@@ -71,5 +75,83 @@ export const rsvpFreeEvent = async (
       return;
     }
     return next(new Error(err.message));
+  }
+};
+
+export const transferTicket = async (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction,
+) => {
+  const parseReceipentEmail = emailSchema.safeParse(req.body.email);
+  const parseTicketId = objectIdSchema.safeParse(req.params.id);
+
+  if (!parseTicketId.success || !parseReceipentEmail.success) {
+    const errors = extractError([parseTicketId, parseReceipentEmail]);
+    res.status(400).json({
+      success: false,
+      message: errors.join("; "),
+    });
+    return;
+  }
+
+  const currentLoggedUserId = req.user!._id;
+  const ticketId = parseTicketId.data;
+
+  try {
+    const ticket = await Ticket.findOne({
+      _id: ticketId,
+    });
+
+    if (!ticket) {
+      res.status(404).json({
+        success: false,
+        message: "Ticket not found",
+      });
+      return;
+    }
+
+    const currentTicketOwnerId = ticket?.userId.toString();
+
+    if (currentLoggedUserId !== currentTicketOwnerId) {
+      res.status(403).json({
+        success: false,
+        message: "Unauthorized",
+      });
+      return;
+    }
+
+    if (ticket.status === "transferred") {
+      res.status(400).json({
+        success: false,
+        message: "Ticket has already been transferred",
+      });
+      return;
+    }
+
+    const email = parseReceipentEmail.data;
+    const user = await getUserByEmailOrUsername(email);
+    if (!user) {
+      res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+      return;
+    }
+
+    ticket.userId = user._id;
+    ticket.status = "transferred";
+    await ticket.save();
+
+    const { _id, userId, eventId, type } = ticket;
+    const filterdTicket = { _id, userId, eventId, type };
+
+    res.json({
+      success: true,
+      message: "Ticket transferred successfully",
+      data: filterdTicket,
+    });
+  } catch (err: any) {
+    return next(err);
   }
 };
