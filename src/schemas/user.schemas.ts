@@ -2,11 +2,13 @@ import { z } from "zod";
 
 export const usernameSchema = z
   .string()
+  .trim()
   .min(5, "Username must contain at least 5 characters")
   .max(55);
 
 export const emailSchema = z
   .string()
+  .trim()
   .email("Invalid email")
   .min(6, "Email must contain at least 6 characters")
   .max(254);
