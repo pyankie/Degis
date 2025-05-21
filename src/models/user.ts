@@ -11,6 +11,7 @@ export interface IUser {
 export interface IUserDocuemnt extends IUser, Document {
   _id: mongoose.Types.ObjectId;
   role: "user" | "organizer" | "admin";
+  isBanned: Boolean;
   createdAt: Date;
   updatedAt: Date;
   generateAuthToken: () => string;
@@ -37,6 +38,7 @@ const userSchema = new mongoose.Schema(
       enum: ["user", "organizer", "admin"],
       default: "user",
     },
+    isBanned: { type: Boolean, default: false },
     createdAt: { type: Date, default: Date.now },
     updatedAt: { type: Date, default: Date.now },
   },
