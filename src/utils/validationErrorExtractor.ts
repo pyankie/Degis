@@ -1,7 +1,7 @@
 import { SafeParseReturnType } from "zod";
 
 export const extractError = (
-  parsers: SafeParseReturnType<string, string>[],
+  parsers: SafeParseReturnType<string | {}, string | {}>[],
 ) => {
   const errors = [];
   for (const parse of parsers) {
