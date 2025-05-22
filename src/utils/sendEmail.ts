@@ -9,17 +9,21 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-export async function sendInviteEmail(
-  to: string,
-  eventTitle: string,
-  token: string,
-) {
+export const sendEmail = async ({
+  to,
+  subject,
+  text,
+}: {
+  to: string;
+  subject: string;
+  text: string;
+}) => {
   try {
     const info = await transporter.sendMail({
       from: process.env.APP_EMAIL,
       to,
-      subject: `You're Invited to ${eventTitle}`,
-      html: `<p>Click <a href="http://localhost:5000/api/auth/register?token=${token}">here</a> to join the event!</p>`,
+      subject,
+      text,
     });
     console.log("Email sent:", info.messageId);
     return info;
@@ -27,4 +31,4 @@ export async function sendInviteEmail(
     console.error("Email error:", error);
     throw new Error("Failed to send email");
   }
-}
+};
