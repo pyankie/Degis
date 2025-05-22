@@ -245,8 +245,9 @@ export default class EventController {
 
       const { invitees, ...rest } = updateData;
 
-      const { registeredIds, unregisteredEmails } =
+      const { registeredUsersSafe: registeredUsers, unregisteredEmails } =
         await splitInvtees(invitees);
+      const registeredIds = registeredUsers.map((u) => u.userId);
 
       const eventId = eventIdParse.data;
       const updatedEvent = await Event.findByIdAndUpdate(

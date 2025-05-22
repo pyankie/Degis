@@ -7,13 +7,18 @@ import { v4 as uuidv4 } from "uuid";
 import { z } from "zod";
 import { attendeesQuerySchema } from "../schemas/query.schema";
 import { Ticket } from "../models/ticket";
-import { sendInviteEmail } from "../utils/sendInviteEmail";
+import { sendEmail } from "../utils/sendEmail";
 import { createNotification } from "./notificationService";
 import { INotification } from "../models/notification";
 
 export interface ISplitInvitees {
-  registeredIds: mongoose.Types.ObjectId[];
+  registeredUsersSafe: SafeUserData[];
   unregisteredEmails: string[];
+}
+export interface SafeUserData {
+  userId: Types.ObjectId;
+  username: string;
+  email: string;
 }
 
 type Query = z.infer<typeof attendeesQuerySchema>;
@@ -67,7 +72,11 @@ export const createEvent = async (eventData: IEventType) => {
   //TODO: add email sending logic upon event creation to invitees (both registered and unregistered users)
 
   const { invitees, coverImage, ...rest } = eventData;
-  const { registeredIds, unregisteredEmails } = await splitInvtees(invitees);
+
+  const { registeredUsersSafe: registeredUsers, unregisteredEmails } =
+    await splitInvtees(invitees);
+
+  const registeredIds = registeredUsers.map((u) => u.userId);
 
   const newEvent = new Event({
     ...rest,
@@ -92,11 +101,25 @@ export const createEvent = async (eventData: IEventType) => {
     await EventInvitation.insertMany(unregisteredInvitees);
 
     for (let inv of unregisteredInvitees) {
-      await sendInviteEmail(inv.email, savedEvent.title, inv.token);
+      await sendEmail({
+        to: inv.email,
+        //TODO: update the invitation URL for unregistered users: /api/auth/register/invite?token
+        subject: `You're Invited to ${savedEvent.title}`,
+        text: `Click here to join the event! http://localhost:5000/api/auth/register?token=${inv.token}`,
+      });
     }
   }
-  if (registeredIds.length > 0)
-    for (let userId of registeredIds) {
+  if (registeredUsers.length > 0)
+    for (let user of registeredUsers) {
+      await sendEmail({
+        to: user.email,
+        subject: `You are invited to: ${savedEvent.title}!`,
+        //TODO: define the frontend URL
+        // html: `Hi ${user.email || "User"},\nJoin ${savedEvent.title}! RSVP here: ${process.env.FRONTEND_URL}/events/${savedEvent._id}/rsvp`,
+        text: `Hi ${user.username || "User"},\nJoin ${savedEvent.title}! RSVP here: http://localhost:5000/api/events/${savedEvent._id}/rsvp`,
+      });
+
+      const userId = user.userId;
       await createNotification({
         userId,
         eventId: savedEvent._id,
@@ -117,17 +140,17 @@ export const splitInvtees = async (
     ? await User.find({ email: { $in: invitedEmails } }).select("_id email ")
     : [];
 
-  const registeredEmails = registeredUsers?.map((u) => u.email);
-
-  const registeredIds = registeredUsers?.map(
-    (u) => u._id,
-  ) as mongoose.Types.ObjectId[];
+  const registeredUsersSafe = registeredUsers?.map((u) => {
+    return { userId: u._id, username: u.username, email: u.email };
+  });
 
   const unregisteredEmails =
-    invitedEmails?.filter((email) => !registeredEmails.includes(email)) || [];
+    invitedEmails?.filter(
+      (email) => !registeredUsersSafe.some((user) => user.email === email),
+    ) || [];
 
   return {
-    registeredIds,
+    registeredUsersSafe,
     unregisteredEmails,
   };
 };

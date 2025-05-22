@@ -82,6 +82,7 @@ export default class UserController {
     res: Response,
     next: NextFunction,
   ) => {
+    //FIXME: use valdation.data, not req.body
     const userData: IUser = req.body;
 
     try {
